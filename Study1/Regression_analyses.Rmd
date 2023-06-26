@@ -1,0 +1,1116 @@
+---
+title: "Relationship between Socialness and Behaviour"
+author: "Veronica Diveica"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+
+# set knitting options
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE)
+
+# load relevant packages
+library(tidyverse) # for data wrangling and viz
+library(apaTables) # APA formatted descriptives & correlations table
+library(lmSupport) # 
+library(jtools) #  summ to calculate sr2 values
+library(olsrr)  # vif,tolerance to assess multicollinearity
+library(interactions) # interaction figs
+library(papaja) # apa formatted tables
+library(lm.beta) # get p values for linear models
+library(ggprism) # clean theme for plots
+library(ggExtra) # add distributions to scatterplot
+library(cowplot) # combine plots
+
+# prepare data
+
+# # socialness
+# socialness <- read_csv("Data/Properties_data/SocialnessNorms_DiveicaPexmanBinney2021.csv")
+# socialness <- socialness %>% dplyr::select(Word, Mean) %>% rename("Socialness" = "Mean")
+# 
+# # Concreteness
+# concreteness <- read_csv("Data/Properties_data/Brysbaert2013_Concreteness.csv")
+# concreteness <- concreteness %>% dplyr::select(Word, Conc.M) %>% rename("Concreteness" = "Conc.M")
+# 
+# # Valence
+# emotion <- read_csv("Data/Properties_data/Warriner 2013 Emotion ratings.csv")
+# emotion <- emotion %>% mutate(Valence_ext = abs(V.Mean.Sum - 5)) %>% # compute valence extremity
+#   select(Word, Valence_ext)
+# 
+# # OLD, SUBTL Word Frequency, LDT Visual
+# ELP <- read_csv("Data/Properties_data/ELP_Items.csv")
+# ELP <- ELP %>% dplyr::select(Word, LgSUBTLWF, OLD, I_Zscore, I_Mean_Accuracy) %>%
+#   rename("Frequency" = "LgSUBTLWF", "LDT_zRT" = "I_Zscore", "LDT_Accuracy" = "I_Mean_Accuracy")
+# 
+# # Age of Acquisition
+# aoa <- read_csv("Data/Properties_data/Kuperman_2012_AoA.csv")
+# aoa <- aoa %>% dplyr::select(Word, Rating.Mean) %>%
+#   rename("AoA.Rating" = "Rating.Mean")
+# 
+# # Auditory lexical decision
+# aud_LDT_dat <- read_csv("Data/Task_data/aelp.csv")
+# aud_LDT_dat  <- aud_LDT_dat  %>% dplyr::select(word_us, n_phon, phono_upoint, pld20_m, us_ldt_zrt_m, us_ldt_acc, us_ldt_zrtmdur_m, uk_ldt_zrt_m, uk_ldt_acc, uk_ldt_zrtmdur_m, sg_ldt_zrt_m, sg_ldt_acc, sg_ldt_zrtmdur_m) %>%
+#   rename("Word" = "word_us", "Phonemes_no" = "n_phon")
+# 
+# # Calgary semantic decision task
+# CDT <- read_csv("Data/Task_data/Pexman_2017.csv")
+# CDT <- CDT %>% dplyr::select(Word, WordType, zRTclean_mean, ACC)
+# 
+# # Recognition memory
+# mem_dat1 <- read_csv("Data/Task_data/Cortese_2010.csv")
+# mem_dat1 <- mem_dat1 %>% dplyr::select(item, both_hit, both_fa, both_h_fa) %>%
+#   rename("Word" = "item", "Hits" = "both_hit", "FalseAlarms" = "both_fa", "Hit_min_FA" = "both_h_fa")
+# mem_dat2 <- read_csv("Data/Task_data/recogmemcorteseetal2015.csv")
+# mem_dat2 <- mem_dat2 %>% dplyr::select(item, e1e2hits, e1e2fas, e1e2hminfas) %>%
+#   rename("Word" = "item", "Hits" = "e1e2hits", "FalseAlarms" = "e1e2fas", "Hit_min_FA" = "e1e2hminfas")
+# mem_dat <- rbind(mem_dat1, mem_dat2)
+# rm(mem_dat1, mem_dat2)
+# 
+# # combine data
+# data <- left_join(socialness, concreteness, by = "Word")
+# data <- left_join(data, emotion, by = "Word")
+# data <- left_join(data, ELP, by = "Word")
+# data <- left_join(data, aoa, by = "Word")
+# data <- left_join(data, CDT, by = "Word")
+# data <- left_join(data, mem_dat, by = "Word")
+# data <- left_join(data, aud_LDT_dat, by = "Word")
+# data$Length <- sapply(data$Word, nchar) # calculate word length
+# data <- data %>% distinct()
+# 
+# # clean environment
+# rm(ELP, aoa, aud_LDT_dat, CDT, mem_dat, socialness, concreteness, emotion)
+# # save base dataset
+# write_csv(data, "Data/Regressions_dataset.csv")
+
+# load pre-prepared (see prep code above) dataset
+data <- read_csv("Data/Regressions_dataset.csv")
+
+```
+
+# R Session Information
+```{r session info, include = TRUE}
+sessionInfo()
+```
+
+
+# Relationship between Socialness and Concreteness
+
+```{r concreteness by socialness}
+fig1 <- ggplot(data, aes( x = Concreteness, y = Socialness)) +
+  geom_point(aes(alpha = 0.1), size = 0.5, show.legend = FALSE) +
+  geom_smooth(method = "lm", colour = "#79ad41", linewidth = 1.5) +
+  theme_prism() +
+  scale_y_continuous(limits = c(1, 7), breaks = c(1, 2, 3, 4 ,5, 6, 7))
+fig1 <- ggMarginal(fig1, type = "density", colour = "#79ad41", fill = "#79ad41", alpha = 0.3)
+
+# ggsave("Figures/ConcretenessSocialness_scatter.png", height = 5, width = 5)
+
+```
+
+```{r concreteness by socialness viz, include = TRUE}
+fig1
+```
+
+# Socialness as a Predictor of Behaviour
+
+## LDT Visual
+```{r LDT Visual}
+
+# prepare data
+LDT_dat <- data %>% 
+  dplyr::select(Socialness, Frequency, Length, OLD, AoA.Rating, Concreteness, Valence_ext, LDT_zRT, LDT_Accuracy) %>% 
+  drop_na() %>% 
+  mutate(LDT_Errors = 1 - LDT_Accuracy) %>% 
+  dplyr::select(-LDT_Accuracy)
+
+LDT_dat_descr <- LDT_dat %>% 
+  select(Socialness, Concreteness) %>% 
+  summarise("Socialness M" = mean(Socialness), "Socialness SD" = sd(Socialness),
+            "Concreteness M" = mean(Concreteness), "Concreteness SD" = sd(Concreteness)) # calculate mean and SD for supplementary table (see below)
+  
+LDT_dat <- LDT_dat %>% mutate(across(1:7, scale)) # Z-trasnform data
+
+# fit model RT
+LDT_RT <- lm(LDT_zRT ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, LDT_dat)
+
+ols_vif_tol(LDT_RT) # Check Collinearity
+
+LDT_RT_bweights <-summ(LDT_RT, digits = 3, part.corr = TRUE) #calculate sr2
+LDT_RT_sr2 <- as.data.frame(LDT_RT_bweights$coeftable)
+LDT_RT_sr2 <- LDT_RT_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+LDT_RT_sr2 <- as.character(round(LDT_RT_sr2$sr2, 3))
+
+LDT_RT <- lm.beta(LDT_RT) # get standardized betas
+
+# fit model Errors
+LDT_ERR <- lm(LDT_Errors ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, LDT_dat)
+
+LDT_ERR_bweights <-summ(LDT_ERR, digits = 3, part.corr = TRUE) #calculate sr2
+LDT_ERR_sr2 <- as.data.frame(LDT_ERR_bweights$coeftable)
+LDT_ERR_sr2 <- LDT_ERR_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+LDT_ERR_sr2 <- as.character(round(LDT_ERR_sr2$sr2, 3))
+
+LDT_ERR <- lm.beta(LDT_ERR) # get standardized betas
+summary(LDT_ERR)
+
+```
+
+Based on `r nrow(LDT_dat)` words.
+
+### Reaction Times
+```{r LDT Visual results1, include = TRUE}
+papaja::apa_table(summary(LDT_RT)$coefficients)
+```
+
+### Error Rates
+```{r LDT Visual results2, include = TRUE}
+papaja::apa_table(summary(LDT_ERR)$coefficients)
+```
+
+## LDT Auditory
+```{r aud LDT}
+
+# UK
+# prepare data
+aud_LDT_dat_uk  <- data %>% dplyr::select(Socialness, Valence_ext, Concreteness, Frequency, Phonemes_no, AoA.Rating, pld20_m, phono_upoint, uk_ldt_zrt_m, uk_ldt_acc, uk_ldt_zrtmdur_m) %>% drop_na()
+colnames(aud_LDT_dat_uk)[7:11] <- c("PLD", "Unique_pct", "LDT_zRT", "LDT_Accuracy", "LDT_zRTminDUR")
+aud_LDT_dat_uk  <- aud_LDT_dat_uk %>% mutate(LDT_Errors = 1 - LDT_Accuracy) %>% dplyr::select(-LDT_Accuracy) 
+
+aud_LDT_dat_uk_descr <- aud_LDT_dat_uk %>% # calculate mean and SD for supp table
+  select(Socialness, Concreteness) %>% 
+  summarise("Socialness M" = mean(Socialness), "Socialness SD" = sd(Socialness),
+            "Concreteness M" = mean(Concreteness), "Concreteness SD" = sd(Concreteness)) 
+
+aud_LDT_dat_uk <- aud_LDT_dat_uk %>% mutate(across(1:8, scale)) # scale predictors
+
+# fit model RT
+aud_LDT_RT_uk <- lm(LDT_zRT ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_uk)
+
+aud_LDT_RT_uk_bweights <-summ(aud_LDT_RT_uk, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_RT_uk_sr2 <- as.data.frame(aud_LDT_RT_uk_bweights$coeftable)
+aud_LDT_RT_uk_sr2 <- aud_LDT_RT_uk_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_RT_uk_sr2 <- as.character(round(aud_LDT_RT_uk_sr2$sr2, 3))
+
+aud_LDT_RT_uk <- lm.beta(aud_LDT_RT_uk) # standardize beta coefficients
+
+# fit model Errors
+aud_LDT_ERR_uk <- lm(LDT_Errors ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_uk)
+
+aud_LDT_ERR_uk_bweights <-summ(aud_LDT_ERR_uk, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_ERR_uk_sr2 <- as.data.frame(aud_LDT_ERR_uk_bweights$coeftable)
+aud_LDT_ERR_uk_sr2 <- aud_LDT_ERR_uk_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_ERR_uk_sr2 <- as.character(round(aud_LDT_ERR_uk_sr2$sr2, 3))
+
+aud_LDT_ERR_uk <- lm.beta(aud_LDT_ERR_uk) # standardize beta coefficients
+
+# fit model RT-Duration
+aud_LDT_rt_dur_uk <- lm(LDT_zRTminDUR ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_uk)
+
+aud_LDT_rt_dur_uk_bweights <-summ(aud_LDT_rt_dur_uk, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_rt_dur_uk_sr2 <- as.data.frame(aud_LDT_rt_dur_uk_bweights$coeftable)
+aud_LDT_rt_dur_uk_sr2 <- aud_LDT_rt_dur_uk_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_rt_dur_uk_sr2 <- as.character(round(aud_LDT_rt_dur_uk_sr2$sr2, 3))
+
+aud_LDT_rt_dur_uk <- lm.beta(aud_LDT_rt_dur_uk) # standardize beta coefficients
+
+```
+
+Based on `r nrow(aud_LDT_dat_uk)` words.
+
+### Reaction Times
+```{r aud LDT results1, include = TRUE}
+papaja::apa_table(summary(aud_LDT_RT_uk)$coefficients)
+
+```
+
+### Reaction Times - Stimulus Duration
+```{r aud LDT results2, include = TRUE}
+papaja::apa_table(summary(aud_LDT_rt_dur_uk)$coefficients)
+
+```
+
+### Error Rates
+```{r aud LDT results3, include = TRUE}
+papaja::apa_table(summary(aud_LDT_ERR_uk)$coefficients)
+
+```
+
+## Calgary Semantic Decision Task
+
+```{r CDT}
+
+# prepare data
+CDT_dat <- data %>% dplyr::select(Socialness, Valence_ext, Concreteness, Frequency, Length, OLD, AoA.Rating, WordType, zRTclean_mean, ACC) %>% drop_na() %>%  mutate(SDT_Accuracy = as.numeric(sub("%","", ACC))/100) %>% mutate(SDT_Errors = 1 - SDT_Accuracy) %>% dplyr::select(-SDT_Accuracy, -ACC)
+
+# CONCRETE DECISIONS
+SDT_conc_dat <- CDT_dat %>% filter(WordType == "Concrete") %>% select(-WordType) 
+
+SDT_conc_dat_descr <- SDT_conc_dat %>% # calculate mean and SD for supp table
+  select(Socialness, Concreteness) %>% 
+  summarise("Socialness M" = mean(Socialness), "Socialness SD" = sd(Socialness),
+            "Concreteness M" = mean(Concreteness), "Concreteness SD" = sd(Concreteness),
+            "Concreteness_Min" = min(Concreteness), "Concreteness_Max" = max(Concreteness)) 
+
+SDT_conc_dat <- SDT_conc_dat %>% mutate(across(1:7, scale)) # scale predictors
+
+# fit model
+SDT_conc_RT <- lm(zRTclean_mean ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, SDT_conc_dat)
+ols_vif_tol(SDT_conc_RT) # Check Collinearity
+
+SDT_conc_RT_bweights <-summ(SDT_conc_RT, digits = 3, part.corr = TRUE) #calculate sr2
+SDT_conc_RT_sr2 <- as.data.frame(SDT_conc_RT_bweights$coeftable)
+SDT_conc_RT_sr2 <- SDT_conc_RT_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+SDT_conc_RT_sr2 <- as.character(round(SDT_conc_RT_sr2$sr2, 3))
+
+SDT_conc_RT <- lm.beta(SDT_conc_RT) # get standardized beta
+
+# fit model
+SDT_conc_ERR <- lm(SDT_Errors ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, SDT_conc_dat)
+
+SDT_conc_ERR_bweights <-summ(SDT_conc_ERR, digits = 3, part.corr = TRUE) #calculate sr2
+SDT_conc_ERR_sr2 <- as.data.frame(SDT_conc_ERR_bweights$coeftable)
+SDT_conc_ERR_sr2 <- SDT_conc_ERR_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+SDT_conc_ERR_sr2 <- as.character(round(SDT_conc_ERR_sr2$sr2, 3))
+
+SDT_conc_ERR <- lm.beta(SDT_conc_ERR) # get standardized beta
+
+
+# ABSTRACT DECISIONS
+SDT_abst_dat <- CDT_dat %>% filter(WordType == "Abstract") %>% select(-WordType)
+
+SDT_abst_dat_descr <- SDT_abst_dat %>% # calculate mean and SD for supp table
+  select(Socialness, Concreteness) %>% 
+  summarise("Socialness M" = mean(Socialness), "Socialness SD" = sd(Socialness),
+            "Concreteness M" = mean(Concreteness), "Concreteness SD" = sd(Concreteness),
+            "Concreteness_Min" = min(Concreteness), "Concreteness_Max" = max(Concreteness)) 
+
+SDT_abst_dat <- SDT_abst_dat %>% mutate(across(1:7, scale)) # scale predictors
+
+# fit model
+SDT_abst_RT <- lm(zRTclean_mean ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, SDT_abst_dat)
+
+SDT_abst_RT_bweights <-summ(SDT_abst_RT, digits = 3, part.corr = TRUE) #calculate sr2
+SDT_abst_RT_sr2 <- as.data.frame(SDT_abst_RT_bweights$coeftable)
+SDT_abst_RT_sr2 <- SDT_abst_RT_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+SDT_abst_RT_sr2 <- as.character(round(SDT_abst_RT_sr2$sr2, 3))
+
+SDT_abst_RT <- lm.beta(SDT_abst_RT) # get standardized beta
+
+# fit model
+SDT_abst_ERR <- lm(SDT_Errors ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, SDT_abst_dat)
+
+SDT_abst_ERR_bweights <-summ(SDT_abst_ERR, digits = 3, part.corr = TRUE) #calculate sr2
+SDT_abst_ERR_sr2 <- as.data.frame(SDT_abst_ERR_bweights$coeftable)
+SDT_abst_ERR_sr2 <- SDT_abst_ERR_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+SDT_abst_ERR_sr2 <- as.character(round(SDT_abst_ERR_sr2$sr2, 3))
+
+SDT_abst_ERR <- lm.beta(SDT_abst_ERR) # get standardized betas
+
+```
+
+Concrete Decisions analyses are based on `r nrow(SDT_conc_dat)` words, ranging in concreteness from `r SDT_conc_dat_descr$Concreteness_Min` to `r SDT_conc_dat_descr$Concreteness_Max`. 
+Abstract Decisions analyses are based on `r nrow(SDT_abst_dat)` words, ranging in concreteness from `r SDT_abst_dat_descr$Concreteness_Min` to `r SDT_abst_dat_descr$Concreteness_Max`.
+
+### Concrete Decisions - Reaction Times
+```{r CDT results1, include = TRUE}
+papaja::apa_table(summary(SDT_conc_RT)$coefficients)
+
+```
+
+### Concrete Decisions - Error Rates
+```{r CDT results2, include = TRUE}
+papaja::apa_table(summary(SDT_conc_ERR)$coefficients)
+
+```
+
+### Abstract Decisions - Reaction Times
+```{r CDT results3, include = TRUE}
+papaja::apa_table(summary(SDT_abst_RT)$coefficients)
+
+```
+
+### Abstract Decisions - Error Rates
+```{r CDT results4, include = TRUE}
+papaja::apa_table(summary(SDT_abst_ERR)$coefficients)
+
+```
+
+## Recognition Memory Task 
+
+```{r recog mem}
+
+# prepare data
+mem_dat <- data %>% dplyr::select(Socialness, Valence_ext, Concreteness, Frequency, Length, OLD, AoA.Rating,Hits, FalseAlarms, Hit_min_FA) %>% mutate_all(as.numeric) %>% drop_na()
+
+mem_dat_descr <- mem_dat %>% # calculate mean and SD for supp table
+  select(Socialness, Concreteness) %>% 
+  summarise("Socialness M" = mean(Socialness), "Socialness SD" = sd(Socialness),
+            "Concreteness M" = mean(Concreteness), "Concreteness SD" = sd(Concreteness)) 
+
+mem_dat <- mem_dat %>% mutate(across(1:7, scale)) # scale predictors
+
+# fit model - hits
+mem_hits <- lm(Hits ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, mem_dat)
+
+mem_hits_bweights <-summ(mem_hits, digits = 3, part.corr = TRUE) #calculate sr2
+mem_hits_sr2 <- as.data.frame(mem_hits_bweights$coeftable)
+mem_hits_sr2 <- mem_hits_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+mem_hits_sr2 <- as.character(round(mem_hits_sr2$sr2, 3))
+
+mem_hits <- lm.beta(mem_hits) # get standardized betas
+
+# fit model - false alarms
+mem_fa <- lm(FalseAlarms ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, mem_dat)
+
+mem_fa_bweights <-summ(mem_fa, digits = 3, part.corr = TRUE) #calculate sr2
+mem_fa_sr2 <- as.data.frame(mem_fa_bweights$coeftable)
+mem_fa_sr2 <- mem_fa_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+mem_fa_sr2 <- as.character(round(mem_fa_sr2$sr2, 3))
+
+mem_fa <- lm.beta(mem_fa) # get standardized betas
+
+# fit model - H-FA
+mem_h_fa <- lm(Hit_min_FA ~ Length + Frequency + OLD + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, mem_dat)
+
+mem_h_fa_bweights <-summ(mem_h_fa, digits = 3, part.corr = TRUE) #calculate sr2
+mem_h_fa_sr2 <- as.data.frame(mem_h_fa_bweights$coeftable)
+mem_h_fa_sr2 <- mem_h_fa_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+mem_h_fa_sr2 <- as.character(round(mem_h_fa_sr2$sr2, 3))
+
+mem_h_fa <- lm.beta(mem_h_fa) # get standardized betas
+
+```
+
+Based on `r nrow(mem_dat)` words.
+
+### Hits
+```{r recog mem results1, include = TRUE}
+papaja::apa_table(summary(mem_hits)$coefficients)
+
+```
+
+### False Alarms (FA)
+```{r recog mem results2, include = TRUE}
+papaja::apa_table(summary(mem_fa)$coefficients)
+
+```
+
+### Hits-FA
+```{r recog mem results3, include = TRUE}
+papaja::apa_table(summary(mem_h_fa)$coefficients)
+
+```
+
+# Visualize Effects of Interest
+
+## Standardized Coefficients (Heatmap)
+
+```{r heatmap}
+
+# prepare data
+
+heatmap_dat1 <- as.data.frame(LDT_RT$standardized.coefficients)
+heatmap_dat11 <- as.data.frame(summary(LDT_RT)$coefficients[,5])
+heatmap_dat1 <- cbind(heatmap_dat1, heatmap_dat11) %>% drop_na()
+heatmap_dat1 <- heatmap_dat1 %>%
+  rename("LDT Visual RT" = `LDT_RT$standardized.coefficients`, "Pvalue" = `summary(LDT_RT)$coefficients[, 5]`) %>%
+  mutate(`LDT Visual RT` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `LDT Visual RT`)) %>%
+  select(`LDT Visual RT`) %>%
+  filter(row.names(heatmap_dat1) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat2 <- as.data.frame(LDT_ERR$standardized.coefficients)
+heatmap_dat21 <- as.data.frame(summary(LDT_ERR)$coefficients[,5])
+heatmap_dat2 <- cbind(heatmap_dat2, heatmap_dat21) %>% drop_na()
+heatmap_dat2 <- heatmap_dat2 %>%
+  rename("LDT Visual Errors" = `LDT_ERR$standardized.coefficients`, "Pvalue" = `summary(LDT_ERR)$coefficients[, 5]`) %>%
+  mutate(`LDT Visual Errors` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `LDT Visual Errors`)) %>%
+  select(`LDT Visual Errors`) %>%
+  filter(row.names(heatmap_dat2) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat3 <- as.data.frame(aud_LDT_RT_uk$standardized.coefficients)
+heatmap_dat31 <- as.data.frame(summary(aud_LDT_RT_uk)$coefficients[,5])
+heatmap_dat3 <- cbind(heatmap_dat3, heatmap_dat31) %>% drop_na()
+heatmap_dat3 <- heatmap_dat3 %>%
+  rename("LDT Auditory RT" = `aud_LDT_RT_uk$standardized.coefficients`, "Pvalue" = `summary(aud_LDT_RT_uk)$coefficients[, 5]`) %>%
+  mutate(`LDT Auditory RT` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `LDT Auditory RT`)) %>%
+  select(`LDT Auditory RT`) %>%
+  filter(row.names(heatmap_dat3) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat4 <- as.data.frame(aud_LDT_ERR_uk$standardized.coefficients)
+heatmap_dat41 <- as.data.frame(summary(aud_LDT_ERR_uk)$coefficients[,5])
+heatmap_dat4 <- cbind(heatmap_dat4, heatmap_dat41) %>% drop_na()
+heatmap_dat4 <- heatmap_dat4 %>%
+  rename("LDT Auditory Errors" = `aud_LDT_ERR_uk$standardized.coefficients`, "Pvalue" = `summary(aud_LDT_ERR_uk)$coefficients[, 5]`) %>%
+  mutate(`LDT Auditory Errors` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `LDT Auditory Errors`)) %>%
+  select(`LDT Auditory Errors`) %>%
+  filter(row.names(heatmap_dat4) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat5 <- as.data.frame(aud_LDT_rt_dur_uk$standardized.coefficients)
+heatmap_dat51 <- as.data.frame(summary(aud_LDT_rt_dur_uk)$coefficients[,5])
+heatmap_dat5 <- cbind(heatmap_dat5, heatmap_dat51) %>% drop_na()
+heatmap_dat5 <- heatmap_dat5 %>%
+  rename("LDT Auditory RT-Duration" = `aud_LDT_rt_dur_uk$standardized.coefficients`, "Pvalue" = `summary(aud_LDT_rt_dur_uk)$coefficients[, 5]`) %>%
+  mutate(`LDT Auditory RT-Duration` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `LDT Auditory RT-Duration`)) %>%
+  select(`LDT Auditory RT-Duration`) %>%
+  filter(row.names(heatmap_dat5) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat6 <- as.data.frame(SDT_conc_RT$standardized.coefficients)
+heatmap_dat61 <- as.data.frame(summary(SDT_conc_RT)$coefficients[,5])
+heatmap_dat6 <- cbind(heatmap_dat6, heatmap_dat61) %>% drop_na()
+heatmap_dat6 <- heatmap_dat6 %>%
+  rename("SDT Concrete RT" = `SDT_conc_RT$standardized.coefficients`, "Pvalue" = `summary(SDT_conc_RT)$coefficients[, 5]`) %>%
+  mutate(`SDT Concrete RT` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `SDT Concrete RT`)) %>%
+  select(`SDT Concrete RT`) %>%
+  filter(row.names(heatmap_dat6) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat7 <- as.data.frame(SDT_conc_ERR$standardized.coefficients)
+heatmap_dat71 <- as.data.frame(summary(SDT_conc_ERR)$coefficients[,5])
+heatmap_dat7 <- cbind(heatmap_dat7, heatmap_dat71) %>% drop_na()
+heatmap_dat7 <- heatmap_dat7 %>%
+  rename("SDT Concrete Errors" = `SDT_conc_ERR$standardized.coefficients`, "Pvalue" = `summary(SDT_conc_ERR)$coefficients[, 5]`) %>%
+  mutate(`SDT Concrete Errors` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `SDT Concrete Errors`)) %>%
+  select(`SDT Concrete Errors`) %>%
+  filter(row.names(heatmap_dat7) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat8 <- as.data.frame(SDT_abst_RT$standardized.coefficients)
+heatmap_dat81 <- as.data.frame(summary(SDT_abst_RT)$coefficients[,5])
+heatmap_dat8 <- cbind(heatmap_dat8, heatmap_dat81) %>% drop_na()
+heatmap_dat8 <- heatmap_dat8 %>%
+  rename("SDT Abstract RT" = `SDT_abst_RT$standardized.coefficients`, "Pvalue" = `summary(SDT_abst_RT)$coefficients[, 5]`) %>%
+  mutate(`SDT Abstract RT` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `SDT Abstract RT`)) %>%
+  select(`SDT Abstract RT`) %>%
+  filter(row.names(heatmap_dat8) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat9 <- as.data.frame(SDT_abst_ERR$standardized.coefficients)
+heatmap_dat91 <- as.data.frame(summary(SDT_abst_ERR)$coefficients[,5])
+heatmap_dat9 <- cbind(heatmap_dat9, heatmap_dat91) %>% drop_na()
+heatmap_dat9 <- heatmap_dat9 %>%
+  rename("SDT Abstract Errors" = `SDT_abst_ERR$standardized.coefficients`, "Pvalue" = `summary(SDT_abst_ERR)$coefficients[, 5]`) %>%
+  mutate(`SDT Abstract Errors` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `SDT Abstract Errors`)) %>%
+  select(`SDT Abstract Errors`) %>%
+  filter(row.names(heatmap_dat9) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat10 <- as.data.frame(mem_fa$standardized.coefficients)
+heatmap_dat101 <- as.data.frame(summary(mem_fa)$coefficients[,5])
+heatmap_dat10 <- cbind(heatmap_dat10, heatmap_dat101) %>% drop_na()
+heatmap_dat10 <- heatmap_dat10 %>%
+  rename("RMT FA" = `mem_fa$standardized.coefficients`, "Pvalue" = `summary(mem_fa)$coefficients[, 5]`) %>%
+  mutate(`RMT FA` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `RMT FA`)) %>%
+  select(`RMT FA`) %>%
+  filter(row.names(heatmap_dat10) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat11 <- as.data.frame(mem_hits$standardized.coefficients)
+heatmap_dat111 <- as.data.frame(summary(mem_hits)$coefficients[,5])
+heatmap_dat11 <- cbind(heatmap_dat11, heatmap_dat111) %>% drop_na()
+heatmap_dat11 <- heatmap_dat11 %>%
+  rename("RMT Hits" = `mem_hits$standardized.coefficients`, "Pvalue" = `summary(mem_hits)$coefficients[, 5]`) %>%
+  mutate(`RMT Hits` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `RMT Hits`)) %>%
+  select(`RMT Hits`) %>%
+  filter(row.names(heatmap_dat11) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+heatmap_dat12 <- as.data.frame(mem_h_fa$standardized.coefficients)
+heatmap_dat121 <- as.data.frame(summary(mem_h_fa)$coefficients[,5])
+heatmap_dat12 <- cbind(heatmap_dat12, heatmap_dat121) %>% drop_na()
+heatmap_dat12 <- heatmap_dat12 %>%
+  rename("RMT Hits-FA" = `mem_h_fa$standardized.coefficients`, "Pvalue" = `summary(mem_h_fa)$coefficients[, 5]`) %>%
+  mutate(`RMT Hits-FA` = case_when(Pvalue > 0.05 ~ 0, TRUE  ~ `RMT Hits-FA`)) %>%
+  select(`RMT Hits-FA`) %>%
+  filter(row.names(heatmap_dat12) %in% c("Socialness", "Concreteness", "Concreteness:Socialness"))
+
+#combine dat
+heatmap_dat <- cbind(heatmap_dat1, heatmap_dat2, heatmap_dat3, heatmap_dat4, heatmap_dat5,
+                     heatmap_dat6, heatmap_dat7, heatmap_dat8, heatmap_dat9, heatmap_dat10,
+                     heatmap_dat11, heatmap_dat12) %>%
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Predictor = replace(Predictor, Predictor == "Concreteness:Socialness", "Socialness*Concreteness")) %>%
+  pivot_longer(!Predictor, values_to = "Standardized Coefficient", names_to = "Outcome Variable") %>%
+  mutate(`Standardized Coefficient` = round(`Standardized Coefficient`, 2)) %>%
+  mutate(`Standardized Coefficient` = ifelse(abs(`Standardized Coefficient`)>0.25, sign(`Standardized Coefficient`)*0.25 , `Standardized Coefficient`))
+
+# create plot
+order <- c("RMT Hits-FA", "RMT FA", "RMT Hits", "SDT Abstract Errors", "SDT Abstract RT", "SDT Concrete Errors", "SDT Concrete RT", "LDT Auditory Errors", "LDT Auditory RT-Duration", "LDT Auditory RT", "LDT Visual Errors", "LDT Visual RT")
+fig2 <- ggplot(heatmap_dat, aes(y = factor(`Outcome Variable`, levels = order),
+                        x = `Predictor`,
+                        fill = `Standardized Coefficient`)) +
+  geom_tile(color = "white", lwd = 1.5, linetype = 1) +
+  scale_fill_gradient2(high ="#d7aca1", 
+                       mid = "white",
+                       low =  "#34b6c6") +
+  #geom_text(aes(label = `Standardized Coefficient`), color = "black", size = 4)+
+  coord_fixed() +
+  theme_prism() +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  ylab("Outcome Variable")
+
+# ggsave("Figures/Std_coefficients_heatmap.png", width = 6, height = 10)
+
+```
+
+```{r viz heatmap, include = TRUE}
+fig2
+```
+
+## Socialness*Concreteness Interaction (lineplots)
+
+```{r interact plot}
+
+# LDT Visual
+f1 <- interact_plot(LDT_RT, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("LDT Visual RT") +
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f2 <- interact_plot(LDT_ERR, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("LDT Visual Errors") +
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+# LDT Auditory UK
+
+f3 <- interact_plot(aud_LDT_RT_uk, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("LDT Auditory RT")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f4 <- interact_plot(aud_LDT_ERR_uk, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("LDT Auditory Errors")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f5 <- interact_plot(aud_LDT_rt_dur_uk, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("LDT Auditory RT-Duration")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+# SDT Concrete
+
+f6 <- interact_plot(SDT_conc_RT, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("SDT Concrete RT")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f7 <- interact_plot(SDT_conc_ERR, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("SDT Concrete Errors")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+# SDT Abstract
+
+f8 <- interact_plot(SDT_abst_RT, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("SDT Abstract RT")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f9 <- interact_plot(SDT_abst_ERR, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("SDT Abstract Errors")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+# RM
+
+f10 <- interact_plot(mem_hits, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("RMT Hits")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f11 <- interact_plot(mem_fa, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("RMT FA")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank())+
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+f12 <- interact_plot(mem_h_fa, pred = Socialness, modx = Concreteness, interval = TRUE, modx.values = "plus-minus", colors = c("#ddc000", "#79ad41"), y.label = element_blank()) +
+  ggtitle("RMT Hits-FA")+
+  theme_prism(base_size = 11) + theme(legend.position= "none", axis.title.x = element_blank()) +
+  scale_x_continuous(breaks = c(-1, 0, 1, 2))
+
+# combine
+fig3 <- plot_grid(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, ncol = 3, nrow = 4, label_size = 20)
+fig3
+# ggsave("Figures/Interaction_plots.png", width = 8, height = 11)
+
+```
+
+```{r viz interact, include = TRUE}
+fig3
+```
+
+# Supplementary Tables
+
+## Results Statistics
+
+```{r prep stats table}
+
+# LDT Visual 
+
+# # prepare data for results table
+# #Make Variables column for table
+# tbl3_pred <- setNames(data.frame(matrix(ncol = 1, nrow = 14)), c("Predictor"))
+# tbl3_pred$Predictor <- c("Length", "Frequency", "OLD", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+# get stats 
+
+# LDT Visual
+t1_rt <- as.data.frame(summary(LDT_RT)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2))
+t1_rt <- cbind(t1_rt, LDT_RT_sr2) %>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+
+t1_err <- as.data.frame(summary(LDT_ERR)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t1_err <- cbind(t1_err, LDT_ERR_sr2) %>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t1 <- cbind(t1_rt, t1_err)
+colnames(t1) <- c("1", "2", "3", "4", "5", "6") 
+row.names(t1) <- c("Length", "Frequency", "OLD", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t1 <- t1 %>% 
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "LDT Visual") %>% relocate(Task)
+  
+# LDT Auditory
+t2_rt <- as.data.frame(summary(aud_LDT_RT_uk)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t2_rt <- cbind(t2_rt, aud_LDT_RT_uk_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t2_err <- as.data.frame(summary(aud_LDT_ERR_uk)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t2_err <- cbind(t2_err, aud_LDT_ERR_uk_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t2_rt_dur <- as.data.frame(summary(aud_LDT_rt_dur_uk)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t2_rt_dur <- cbind(t2_rt_dur, aud_LDT_rt_dur_uk_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t2 <- cbind(t2_rt, t2_err, t2_rt_dur)
+colnames(t2) <- c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+row.names(t2) <- c("Phoneme No.", "Frequency", "PLD", "Uniqueness Point", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t2 <- t2 %>% 
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "LDT Auditory") %>% relocate(Task)
+
+# SDT concrete
+t3_rt <- as.data.frame(summary(SDT_conc_RT)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2))
+t3_rt <- cbind(t3_rt, SDT_conc_RT_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+
+t3_err <- as.data.frame(summary(SDT_conc_ERR)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t3_err <- cbind(t3_err, SDT_conc_ERR_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t3 <- cbind(t3_rt, t3_err)
+colnames(t3) <- c("1", "2", "3", "4", "5", "6") # "b", "SE", "p", "sr2", "b", "SE", "p", "sr2"
+row.names(t3) <- c("Length", "Frequency", "OLD", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t3 <- t3 %>% 
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "SDT Concrete") %>% relocate(Task)
+
+# SDT abstract
+
+t4_rt <- as.data.frame(summary(SDT_abst_RT)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2))
+t4_rt <- cbind(t4_rt, SDT_abst_RT_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+
+t4_err <- as.data.frame(summary(SDT_abst_ERR)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t4_err <- cbind(t4_err, SDT_abst_ERR_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t4 <- cbind(t4_rt, t4_err)
+colnames(t4) <- c("1", "2", "3", "4", "5", "6") 
+row.names(t4) <- c("Length", "Frequency", "OLD", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t4 <- t4 %>% 
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "SDT Abstract") %>% relocate(Task)
+
+# RMT
+t5_h <- as.data.frame(summary(mem_hits)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t5_h <- cbind(t5_h, mem_hits_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t5_fa <- as.data.frame(summary(mem_fa)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t5_fa <- cbind(t5_fa, mem_fa_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t5_h_fa <- as.data.frame(summary(mem_h_fa)$coefficients) %>% 
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>% 
+  mutate(Estimate = round(Estimate, digits = 2)) 
+t5_h_fa <- cbind(t5_h_fa, mem_h_fa_sr2)%>% 
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+
+t5 <- cbind(t5_h, t5_fa, t5_h_fa)
+colnames(t5) <- c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+row.names(t5) <- c("Length", "Frequency", "OLD", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t5 <- t5 %>% 
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "RMT") %>% relocate(Task)
+
+
+table <- plyr::rbind.fill(t2, t1, t3, t4, t5)
+table <- table %>% mutate(across(everything(), ~as.character(.x)))
+colnames(table)[3:11] <- c( "b", "SE", "sr2", "b", "SE", "sr2", "b", "SE", "sr2")
+
+
+```
+
+```{r table, include = TRUE}
+apa_table(table, digits = c())
+```
+
+
+The analyses are based on the following number of words:
+LDT Visual: `r nrow(LDT_dat)`
+LDT Auditory: `r nrow(aud_LDT_dat_uk)`
+SDT Concrete: `r nrow(SDT_conc_dat)`
+SDT Abstract: `r nrow(SDT_abst_dat)`
+RMT: `r nrow(mem_dat)`
+
+
+## LDT Auditory - US & SG Accents
+
+```{r supp aud LDT}
+
+# AUDITORY LEXICAL DECISION DATA - US
+
+# prepare data
+
+aud_LDT_dat_us  <- data %>% dplyr::select(Socialness, Valence_ext, Concreteness, Frequency, Phonemes_no, AoA.Rating, pld20_m, phono_upoint, us_ldt_zrt_m, us_ldt_acc, us_ldt_zrtmdur_m) %>% drop_na()
+colnames(aud_LDT_dat_us)[7:11] <- c("PLD", "Unique_pct", "LDT_zRT", "LDT_Accuracy", "LDT_zRTminDUR")
+aud_LDT_dat_us  <- aud_LDT_dat_us %>% mutate(LDT_Errors = 1 - LDT_Accuracy) %>% dplyr::select(-LDT_Accuracy) %>% mutate(across(1:8, scale)) # scale predictors
+
+# RT fit model
+aud_LDT_RT_us <- lm(LDT_zRT ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_us)
+
+aud_LDT_RT_us_bweights <-summ(aud_LDT_RT_us, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_RT_us_sr2 <- as.data.frame(aud_LDT_RT_us_bweights$coeftable)
+aud_LDT_RT_us_sr2 <- aud_LDT_RT_us_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_RT_us_sr2 <- as.character(round(aud_LDT_RT_us_sr2$sr2, 3))
+
+aud_LDT_RT_us <- lm.beta(aud_LDT_RT_us) # standardize beta coefficients
+summary(aud_LDT_RT_us)
+
+# Accuracy fit model
+aud_LDT_ERR_us <- lm(LDT_Errors ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_us)
+
+aud_LDT_ERR_us_bweights <-summ(aud_LDT_ERR_us, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_ERR_us_sr2 <- as.data.frame(aud_LDT_ERR_us_bweights$coeftable)
+aud_LDT_ERR_us_sr2 <- aud_LDT_ERR_us_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_ERR_us_sr2 <- as.character(round(aud_LDT_ERR_us_sr2$sr2, 3))
+
+aud_LDT_ERR_us <- lm.beta(aud_LDT_ERR_us)
+summary(aud_LDT_ERR_us)
+
+# RT-Duration fit model
+aud_LDT_rt_dur_us <- lm(LDT_zRTminDUR ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_us)
+ols_vif_tol(aud_LDT_rt_dur_us) # Check Collinearity
+
+aud_LDT_rt_dur_us_bweights <-summ(aud_LDT_rt_dur_us, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_rt_dur_us_sr2 <- as.data.frame(aud_LDT_rt_dur_us_bweights$coeftable)
+aud_LDT_rt_dur_us_sr2 <- aud_LDT_rt_dur_us_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_rt_dur_us_sr2 <- as.character(round(aud_LDT_rt_dur_us_sr2$sr2, 3))
+
+aud_LDT_rt_dur_us <- lm.beta(aud_LDT_rt_dur_us)
+summary(aud_LDT_rt_dur_us)
+
+
+#SG
+
+# prepare data
+aud_LDT_dat_sg  <- data %>% dplyr::select(Socialness, Valence_ext, Concreteness, Frequency, Phonemes_no, AoA.Rating, pld20_m, phono_upoint, sg_ldt_zrt_m, sg_ldt_acc, sg_ldt_zrtmdur_m) %>% drop_na()
+colnames(aud_LDT_dat_sg)[7:11] <- c("PLD", "Unique_pct", "LDT_zRT", "LDT_Accuracy", "LDT_zRTminDUR")
+aud_LDT_dat_sg  <- aud_LDT_dat_sg %>% mutate(LDT_Errors = 1 - LDT_Accuracy) %>% dplyr::select(-LDT_Accuracy) %>% mutate(across(1:8, scale)) # scale predictors
+
+# RT fit model
+aud_LDT_RT_sg <- lm(LDT_zRT ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_sg)
+summary(aud_LDT_RT_sg)
+
+aud_LDT_RT_sg_bweights <-summ(aud_LDT_RT_sg, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_RT_sg_sr2 <- as.data.frame(aud_LDT_RT_sg_bweights$coeftable)
+aud_LDT_RT_sg_sr2 <- aud_LDT_RT_sg_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_RT_sg_sr2 <- as.character(round(aud_LDT_RT_sg_sr2$sr2, 3))
+
+aud_LDT_RT_sg <- lm.beta(aud_LDT_RT_sg) # standardize beta coefficients
+
+# Accuracy fit model
+aud_LDT_ERR_sg <- lm(LDT_Errors ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_sg)
+summary(aud_LDT_ERR_sg)
+
+aud_LDT_ERR_sg_bweights <-summ(aud_LDT_ERR_sg, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_ERR_sg_sr2 <- as.data.frame(aud_LDT_ERR_sg_bweights$coeftable)
+aud_LDT_ERR_sg_sr2 <- aud_LDT_ERR_sg_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_ERR_sg_sr2 <- as.character(round(aud_LDT_ERR_sg_sr2$sr2, 3))
+
+aud_LDT_ERR_sg <- lm.beta(aud_LDT_ERR_sg)
+
+# fit model
+aud_LDT_rt_dur_sg <- lm(LDT_zRTminDUR ~ Phonemes_no + Frequency + PLD + Unique_pct + AoA.Rating + Valence_ext + Concreteness + Socialness + Socialness*Concreteness, aud_LDT_dat_sg)
+summary(aud_LDT_rt_dur_sg)
+
+aud_LDT_rt_dur_sg_bweights <-summ(aud_LDT_rt_dur_sg, digits = 3, part.corr = TRUE) #calculate sr2
+aud_LDT_rt_dur_sg_sr2 <- as.data.frame(aud_LDT_rt_dur_sg_bweights$coeftable)
+aud_LDT_rt_dur_sg_sr2 <- aud_LDT_rt_dur_sg_sr2 %>% select(Est., part.r) %>% na.omit() %>% mutate(sr2 = part.r^2)
+aud_LDT_rt_dur_sg_sr2 <- as.character(round(aud_LDT_rt_dur_sg_sr2$sr2, 3))
+
+aud_LDT_rt_dur_sg <- lm.beta(aud_LDT_rt_dur_sg)
+
+
+# prepare supp table
+
+# LDT Auditory US
+t6_rt <- as.data.frame(summary(aud_LDT_RT_us)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t6_rt <- cbind(t6_rt, aud_LDT_RT_us_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t6_err <- as.data.frame(summary(aud_LDT_ERR_us)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t6_err <- cbind(t6_err, aud_LDT_ERR_us_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t6_rt_dur <- as.data.frame(summary(aud_LDT_rt_dur_us)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t6_rt_dur <- cbind(t6_rt_dur, aud_LDT_rt_dur_us_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t6 <- cbind(t6_rt, t6_err, t6_rt_dur)
+colnames(t6) <- c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+row.names(t6) <- c("Phoneme No.", "Frequency", "PLD", "Uniqueness Point", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t6 <- t6 %>%
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "LDT Auditory - US Accent") %>% relocate(Task)
+
+# LDT Auditory Singapore
+t7_rt <- as.data.frame(summary(aud_LDT_RT_sg)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t7_rt <- cbind(t7_rt, aud_LDT_RT_sg_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t7_err <- as.data.frame(summary(aud_LDT_ERR_sg)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t7_err <- cbind(t7_err, aud_LDT_ERR_sg_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t7_rt_dur <- as.data.frame(summary(aud_LDT_rt_dur_sg)$coefficients) %>%
+  slice(-1) %>% select(Estimate, `Std. Error`, `Pr(>|t|)`) %>%
+  mutate(across(everything(), ~ round(.x,digits = 3))) %>%
+  mutate(Estimate = round(Estimate, digits = 2))
+t7_rt_dur <- cbind(t7_rt_dur, aud_LDT_rt_dur_sg_sr2)%>%
+  mutate( pval = case_when(
+  `Pr(>|t|)` < 0.001 ~ "***",
+  `Pr(>|t|)` >= 0.001 & `Pr(>|t|)` <0.01 ~ "**",
+  `Pr(>|t|)` >= 0.01 & `Pr(>|t|)` <0.05 ~ "*",
+  `Pr(>|t|)` >= 0.05 & `Pr(>|t|)` <0.1 ~ ".",
+  `Pr(>|t|)` >= 0.1 ~ " ")) %>%
+  select(-`Pr(>|t|)`) %>%
+  unite(col = "sr2", 3:4, sep = "")
+
+t7 <- cbind(t7_rt, t7_err, t7_rt_dur)
+colnames(t7) <- c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+row.names(t7) <- c("Phoneme No.", "Frequency", "PLD", "Uniqueness Point", "Age of Acquisition", "Valence Extremity", "Concreteness",  "Socialness", "Socialness*Concreteness")
+
+t7 <- t7 %>%
+  rownames_to_column(var = "Predictor") %>%
+  mutate(Task = "LDT Auditory - Singapore Accent") %>% relocate(Task)
+
+
+supp_table <- plyr::rbind.fill(t6, t7)
+supp_table <- supp_table %>% mutate(across(everything(), ~as.character(.x)))
+colnames(supp_table)[3:11] <- c( "b", "SE", "sr2", "b", "SE", "sr2", "b", "SE", "sr2")
+
+```
+
+
+```{r supp table, include = TRUE}
+apa_table(supp_table)
+```
+
+## Descriptives Table 
+
+```{r datasets descriptives, include = TRUE}
+# clean dataframes
+SDT_conc_dat_descr <- SDT_conc_dat_descr %>% select(-Concreteness_Min, -Concreteness_Max)
+SDT_abst_dat_descr <- SDT_abst_dat_descr %>% select(-Concreteness_Min, -Concreteness_Max)
+
+# combine descriptive statistics
+descr <- rbind(LDT_dat_descr, aud_LDT_dat_uk_descr, SDT_conc_dat_descr, SDT_abst_dat_descr, mem_dat_descr)
+descr["Dataset"] <- c("LDT Visual", "LDT Auditory", "SDT Concrete", "SDT Abstract", "RMT")
+descr <- descr %>% 
+  relocate(Dataset)
+
+apa_table(descr)
+```
+

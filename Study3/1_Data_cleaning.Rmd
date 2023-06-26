@@ -1,0 +1,149 @@
+---
+title: "Data Pre-processing"
+author: 'Script written by Emiko Muraki and adapted by Veronica Diveica'
+output:
+  word_document: default
+---
+
+```{r setup,include = FALSE}
+#Load packages
+library(plyr)
+library(tidyverse)
+
+# set chunk options
+knitr::opts_chunk$set(include = FALSE)
+```
+
+
+```{r data, include=FALSE}
+
+#Create path to raw data
+path <- "Data/Raw"
+
+#Create path to export results out
+path_out <- "Data/Preprocessed"
+
+#Load all csv files in data directory
+data_files <- list.files(path = path, pattern = "*.csv", full.names = TRUE)
+data <- ldply(data_files, read_csv)
+
+# Tidy dataframe
+sct <- data %>% 
+  select(Emb_practice.thisIndex, embResp.keys, embResp.corr, embResp.rt, Word,  condition, Socialness, Dom_PoS_SUBTLEX, Concreteness, Cresp, participant, Embody.thisIndex) %>% 
+  filter(condition %in% c("A1_B1", "A1_B2", "A2_B1", "A2_B2")) %>%
+  filter(is.na(Emb_practice.thisIndex)) %>%
+  rename("PoS" = "Dom_PoS_SUBTLEX", "Socialness_Rating" = "Socialness") %>%
+  mutate(Socialness = case_when(condition == "A1_B1" ~ "Nonsocial", condition == "A2_B1" ~ "Social", 
+                                condition == "A1_B2" ~ "Nonsocial", condition == "A2_B2" ~ "Social"))  # add info about stimuli categories
+
+```
+
+
+```{r ppt accuracy, include=FALSE}
+
+# CHECK PARTICIPANTS' ACCURACY
+# calculate accuracy threshold
+binom.test(159, 268, 0.5, alternative = "greater") # p = 0.01347
+acc_threshold <- binom.test(160, 268, 0.5, alternative = "greater") # p = 0.0009 Prob of success 0.597
+acc_threshold <- as.numeric(acc_threshold$estimate)
+
+#Calculate participant accuracy stats
+participant_acc <- sct %>% 
+  group_by(participant) %>% 
+  summarise(pptAcc = sum(embResp.corr)/268) # get amount correct out of total trials
+
+#Get list of participants with accuracy less than threshold
+accuracy_exclusions <- participant_acc %>% 
+  filter(pptAcc < acc_threshold) 
+
+# Save list of participants excluded due to below chance accuracy
+write.csv(accuracy_exclusions, file.path(path_out, file = "Participant_Accuracy_Exclusions.csv"), row.names = FALSE)
+
+#Filter data to exclude participants with low accuracy
+"%notin%" <- Negate("%in%") #Create notin operator
+sct_lowaccremove <- sct %>% 
+  filter(participant %notin% accuracy_exclusions$participant)
+
+
+```
+
+```{r item accuracy, include=FALSE}
+
+## CHECK ITEM-LEVEL ACCURACY
+#Calculate item accuracy stats
+item_acc <- sct_lowaccremove %>% 
+  group_by(Word) %>% 
+  summarise(itemAcc = sum(embResp.corr)/nrow(participant_acc))
+
+#Get list of items with accuracy less than threshold
+item_exclusions <- item_acc %>%
+  filter(itemAcc < 0.5)
+
+#Save items excluded due to accuracy
+write.csv(item_exclusions, file.path(path_out, file = "Item_Exclusions.csv"), row.names = FALSE)
+
+#Filter data to exclude items with low accuracy
+sct_lowaccremove_itemremove <- sct_lowaccremove %>%
+  filter(Word %notin% item_exclusions$Word)
+
+```
+
+```{r trial outliers, include=FALSE}
+
+## CHECK OUTLIER TRIALS
+#Calculate participant response time mean and SD 
+participant_resp <- sct_lowaccremove_itemremove %>% 
+  group_by(participant) %>% 
+  summarise(MeanRT = mean(embResp.rt, na.rm = TRUE), SD = sd(embResp.rt, na.rm = TRUE)) %>% 
+  mutate(SD_UL = MeanRT + 3*SD) # calculate participant-level upper threshold
+
+# Filter data to exclude outlier trials
+sct_final <- left_join(sct_lowaccremove_itemremove, participant_resp, by = "participant") %>%
+  mutate(trial_exclude = ifelse(embResp.rt > SD_UL | embResp.rt < 0.25 , 1, 0)) %>%
+  filter(trial_exclude == 0  | is.na(trial_exclude)) %>%
+  select(participant, Word, embResp.corr, embResp.rt, PoS, Socialness, Concreteness)
+
+```
+
+
+```{r clean data, include=FALSE}
+
+# save clean data
+colnames(sct_final)[3:4] <- c("ACC", "RT")
+write_csv(sct_final, file.path(path_out, file = "Data_clean.csv"))
+
+# calculate data loss
+excluded_obs <- nrow(sct)-nrow(sct_final) # all
+excluded_noun <- nrow(sct%>%filter(PoS=="Noun"))-nrow(sct_final%>%filter(PoS=="Noun")) # experimental only
+
+```
+
+```{r demographics}
+
+# load sample demographics data
+dmg <- read_csv("Data/Demographics.csv")
+
+# clean
+dmg <- dmg %>% 
+  slice_tail(n = nrow(dmg)-2) %>%
+  filter(ResponseId %in% sct_final$participant) %>%
+  select(ResponseId, D1, D2, Q6) %>%
+  mutate(across(2:3, as.numeric))
+colnames(dmg)[2:4] <- c("Age", "Education", "Gender") 
+
+```
+
+**Participants**
+The participants were recruited via the online platform Prolific (www.prolific.co). Responders were restricted to those who did not participate in the first experiment, had a 100% approval rate on Prolific, and self-reported being fluent in English and having no language disorders. Participants completed the study in 20 minutes on average and were compensated with GBP £4. We collected data from a sample of `r nrow(participant_acc)` participants, with ages ranging from `r min(dmg$Age)` to `r max(dmg$Age)` (*M* = `r round(mean(dmg$Age), 2)`, *SD* = `r round(sd(dmg$Age), 2)`). Of the participants, `r nrow(filter(dmg, Gender == "Woman"))` were women, `r nrow(filter(dmg, Gender == "Man"))` men and `r nrow(filter(dmg, Gender == "Prefer not to answer"))` unknown. On average, participants completed `r round(mean(dmg$Education, na.rm = TRUE), 2)` years of formal education (*SD* = `r round(sd(dmg$Education, na.rm = TRUE), 2)`). 
+
+**Data Cleaning**
+We collected a total of `r nrow(sct)` observations, including verb and noun trials. We excluded data from `r nrow(accuracy_exclusions)` participants with below-chance accuracy. All noun stimuli received correct responses from at least 50% of the remaining participants. However, `r excluded_noun` of the experimental trials (`r round(excluded_noun*100/nrow(sct%>%filter(PoS=="Noun")), 2)`%) were identified as RT outliers and were excluded from the analyses. Therefore, the analyses reported are based on `r nrow(filter(sct_final, PoS == "Noun"))` experimental observations, out of which `r nrow(filter(sct_final, PoS == "Noun", ACC == 1))` are correct trials.
+
+ 
+**Session Info**
+```{r session info, include = TRUE}
+
+xfun::session_info()
+
+```
+

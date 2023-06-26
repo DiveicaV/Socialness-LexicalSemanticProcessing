@@ -1,0 +1,85 @@
+StartDate,EndDate,Status,Progress,Duration (in seconds),Finished,RecordedDate,ResponseId,DistributionChannel,UserLanguage,Q_RecaptchaScore,Consent_Q,D1,D2,Q6,Q6_8_TEXT,ResponseID
+Start Date,End Date,Response Type,Progress,Duration (in seconds),Finished,Recorded Date,Response ID,Distribution Channel,User Language,Q_RecaptchaScore,"By selecting ‘Yes, I agree to participate’, this acts as an electronic signature and indicates that you 1) understand to your satisfaction the information provided to you about your participation in this research project, and 2) agree to participate as a research subject.","What is your age? 
+
+Please respond using numbers rather than text.","How many years of education do you have?
+
+For example, if you completed Grades 1 to 12 and have completed 2 years of university, your answer would be 14.
+
+Please respond using only numbers, rather than text.",Please select how you identify (select all that apply): - Selected Choice,Please select how you identify (select all that apply): - Another gender identity (please specify) - Text,ResponseID
+"{""ImportId"":""startDate"",""timeZone"":""Europe/London""}","{""ImportId"":""endDate"",""timeZone"":""Europe/London""}","{""ImportId"":""status""}","{""ImportId"":""progress""}","{""ImportId"":""duration""}","{""ImportId"":""finished""}","{""ImportId"":""recordedDate"",""timeZone"":""Europe/London""}","{""ImportId"":""_recordId""}","{""ImportId"":""distributionChannel""}","{""ImportId"":""userLanguage""}","{""ImportId"":""Q_RecaptchaScore""}","{""ImportId"":""QID1""}","{""ImportId"":""QID4_TEXT""}","{""ImportId"":""QID5_TEXT""}","{""ImportId"":""QID6""}","{""ImportId"":""QID6_8_TEXT""}","{""ImportId"":""QSEDResponseID""}"
+2022-06-13 16:30:26,2022-06-13 16:31:10,IP Address,100,43,TRUE,2022-06-13 16:31:10,R_3ISMymWzbZIgYqQ,anonymous,EN,1,Yes - I agree to participate,32,16,Woman,-99,R_3ISMymWzbZIgYqQ
+2022-06-13 17:25:30,2022-06-13 17:26:15,IP Address,100,44,TRUE,2022-06-13 17:26:15,R_3Pts50E1NYtCe4D,anonymous,EN,1,Yes - I agree to participate,53,17,Man,-99,R_3Pts50E1NYtCe4D
+2022-06-13 17:26:28,2022-06-13 17:27:07,IP Address,100,38,TRUE,2022-06-13 17:27:07,R_1cTebjnfTz4D2fW,anonymous,EN,1,Yes - I agree to participate,20,14,Woman,-99,R_1cTebjnfTz4D2fW
+2022-06-13 17:25:13,2022-06-13 17:27:20,IP Address,100,126,TRUE,2022-06-13 17:27:20,R_2Ra12OMI9sTsr7I,anonymous,EN,1,Yes - I agree to participate,21,14,Man,-99,R_2Ra12OMI9sTsr7I
+2022-06-13 17:28:30,2022-06-13 17:30:02,IP Address,100,92,TRUE,2022-06-13 17:30:03,R_3fdU0V1SzZ68yAa,anonymous,EN,0.8999999761581420,Yes - I agree to participate,22,16,Woman,-99,R_3fdU0V1SzZ68yAa
+2022-06-13 17:28:48,2022-06-13 17:30:19,IP Address,100,90,TRUE,2022-06-13 17:30:19,R_3CrJIlQ34zA7oB3,anonymous,EN,0.8999999761581420,Yes - I agree to participate,47,20,Woman,-99,R_3CrJIlQ34zA7oB3
+2022-06-13 17:30:36,2022-06-13 17:31:12,IP Address,100,36,TRUE,2022-06-13 17:31:12,R_1IZx8go9nCHC3q9,anonymous,EN,1,Yes - I agree to participate,21,15,Woman,-99,R_1IZx8go9nCHC3q9
+2022-06-13 17:29:37,2022-06-13 17:31:19,IP Address,100,102,TRUE,2022-06-13 17:31:19,R_2sXtvWa1hsv9QIp,anonymous,EN,0.8999999761581420,Yes - I agree to participate,28,18,Woman,-99,R_2sXtvWa1hsv9QIp
+2022-06-13 17:28:25,2022-06-13 17:41:09,IP Address,100,763,TRUE,2022-06-13 17:41:09,R_3PaWHUr0MxhkRFt,anonymous,EN,1,Yes - I agree to participate,38,16,Man,-99,R_3PaWHUr0MxhkRFt
+2022-06-13 18:16:32,2022-06-13 18:18:11,IP Address,100,99,TRUE,2022-06-13 18:18:12,R_24fwY77GeQcozJf,anonymous,EN,1,Yes - I agree to participate,20,14,Man,-99,R_24fwY77GeQcozJf
+2022-06-13 18:23:43,2022-06-13 18:24:18,IP Address,100,35,TRUE,2022-06-13 18:24:18,R_1gtNKrdQkehsLYV,anonymous,EN,1,Yes - I agree to participate,47,12,Man,-99,R_1gtNKrdQkehsLYV
+2022-06-13 18:23:54,2022-06-13 18:24:18,IP Address,100,24,TRUE,2022-06-13 18:24:19,R_PNWpofcPRcPwCit,anonymous,EN,0.8999999761581420,Yes - I agree to participate,29,15,Man,-99,R_PNWpofcPRcPwCit
+2022-06-13 18:24:01,2022-06-13 18:24:27,IP Address,100,25,TRUE,2022-06-13 18:24:27,R_1pYD7QKz5G1Tu7B,anonymous,EN,1,Yes - I agree to participate,34,17,Man,-99,R_1pYD7QKz5G1Tu7B
+2022-06-13 18:24:19,2022-06-13 18:24:45,IP Address,100,26,TRUE,2022-06-13 18:24:45,R_R3LXZ22kSw4XmWR,anonymous,EN,0.8999999761581420,Yes - I agree to participate,21,15,Prefer not to answer,-99,R_R3LXZ22kSw4XmWR
+2022-06-13 18:23:50,2022-06-13 18:24:55,IP Address,100,64,TRUE,2022-06-13 18:24:55,R_5BjqrQ4P6opQ8yR,anonymous,EN,1,Yes - I agree to participate,60,12,Man,-99,R_5BjqrQ4P6opQ8yR
+2022-06-13 18:24:38,2022-06-13 18:25:37,IP Address,100,59,TRUE,2022-06-13 18:25:38,R_41pn324TzlkEAGB,anonymous,EN,1,Yes - I agree to participate,32,18,Man,-99,R_41pn324TzlkEAGB
+2022-06-13 18:24:33,2022-06-13 18:25:51,IP Address,100,77,TRUE,2022-06-13 18:25:52,R_1IKsnkWpRsjTaI2,anonymous,EN,1,Yes - I agree to participate,60,12,Woman,-99,R_1IKsnkWpRsjTaI2
+2022-06-13 18:25:06,2022-06-13 18:26:13,IP Address,100,67,TRUE,2022-06-13 18:26:14,R_28S6McyHJYe5kyD,anonymous,EN,1,Yes - I agree to participate,37,17,Woman,-99,R_28S6McyHJYe5kyD
+2022-06-13 18:25:40,2022-06-13 18:26:20,IP Address,100,40,TRUE,2022-06-13 18:26:21,R_24MJNqpUAPpG0Yy,anonymous,EN,1,Yes - I agree to participate,42,15,Woman,-99,R_24MJNqpUAPpG0Yy
+2022-06-13 18:25:09,2022-06-13 18:36:27,IP Address,100,678,TRUE,2022-06-13 18:36:27,R_1rDEiPc8MBvaWCj,anonymous,EN,0.8999999761581420,Yes - I agree to participate,44,20,Non-binary,-99,R_1rDEiPc8MBvaWCj
+2022-06-13 19:30:42,2022-06-13 19:31:09,IP Address,100,26,TRUE,2022-06-13 19:31:09,R_3GAFbDMtgTIyxS5,anonymous,EN,0.8999999761581420,Yes - I agree to participate,28,15,Man,-99,R_3GAFbDMtgTIyxS5
+2022-06-13 19:30:56,2022-06-13 19:31:32,IP Address,100,35,TRUE,2022-06-13 19:31:32,R_3nNrVVaW7f9eLDq,anonymous,EN,1,Yes - I agree to participate,18,12,Man,-99,R_3nNrVVaW7f9eLDq
+2022-06-13 19:30:37,2022-06-13 19:31:45,IP Address,100,67,TRUE,2022-06-13 19:31:45,R_sG9EMpVOcjAC2nT,anonymous,EN,1,Yes - I agree to participate,20,13,Man,-99,R_sG9EMpVOcjAC2nT
+2022-06-13 19:30:44,2022-06-13 19:32:03,IP Address,100,78,TRUE,2022-06-13 19:32:03,R_VUoLnXCpagrKhwZ,anonymous,EN,1,Yes - I agree to participate,25,19,Woman,-99,R_VUoLnXCpagrKhwZ
+2022-06-13 19:31:06,2022-06-13 19:32:05,IP Address,100,58,TRUE,2022-06-13 19:32:05,R_3LhhwDiDjW1onYZ,anonymous,EN,0.8999999761581420,Yes - I agree to participate,21,14,Man,-99,R_3LhhwDiDjW1onYZ
+2022-06-13 19:30:49,2022-06-13 19:33:00,IP Address,100,130,TRUE,2022-06-13 19:33:00,R_2VQNlCk3iZbuFT0,anonymous,EN,1,Yes - I agree to participate,40,18,Woman,-99,R_2VQNlCk3iZbuFT0
+2022-06-13 19:33:20,2022-06-13 19:34:10,IP Address,100,50,TRUE,2022-06-13 19:34:11,R_RQwCSwgVb4rNANH,anonymous,EN,1,Yes - I agree to participate,49,16,Woman,-99,R_RQwCSwgVb4rNANH
+2022-06-13 19:35:59,2022-06-13 19:36:27,IP Address,100,27,TRUE,2022-06-13 19:36:27,R_3dX0d90U9UG6tON,anonymous,EN,1,Yes - I agree to participate,27,16,Man,-99,R_3dX0d90U9UG6tON
+2022-06-13 19:33:05,2022-06-13 19:37:06,IP Address,100,241,TRUE,2022-06-13 19:37:06,R_12o60uCi7gQgdDy,anonymous,EN,0.8999999761581420,Yes - I agree to participate,30,17,Man,-99,R_12o60uCi7gQgdDy
+2022-06-13 20:15:17,2022-06-13 20:16:11,IP Address,100,53,TRUE,2022-06-13 20:16:11,R_1Q4UCO8Qw3QKCfq,anonymous,EN,1,Yes - I agree to participate,21,15,Man,-99,R_1Q4UCO8Qw3QKCfq
+2022-06-13 21:01:50,2022-06-13 21:02:16,IP Address,100,26,TRUE,2022-06-13 21:02:17,R_2S35x2DCHXdyLbJ,anonymous,EN,0.8999999761581420,Yes - I agree to participate,29,14,Woman,-99,R_2S35x2DCHXdyLbJ
+2022-06-13 21:02:11,2022-06-13 21:02:31,IP Address,100,20,TRUE,2022-06-13 21:02:31,R_2B4IPA4sEdxmoZE,anonymous,EN,1,Yes - I agree to participate,29,15,Man,-99,R_2B4IPA4sEdxmoZE
+2022-06-13 21:02:16,2022-06-13 21:02:42,IP Address,100,25,TRUE,2022-06-13 21:02:42,R_20NndKuy24lEi5t,anonymous,EN,0.8999999761581420,Yes - I agree to participate,31,13,Man,-99,R_20NndKuy24lEi5t
+2022-06-13 21:02:47,2022-06-13 21:03:36,IP Address,100,49,TRUE,2022-06-13 21:03:36,R_2TNJvjT8UQNwwUI,anonymous,EN,1,Yes - I agree to participate,22,16,Man,-99,R_2TNJvjT8UQNwwUI
+2022-06-13 21:02:52,2022-06-13 21:04:03,IP Address,100,70,TRUE,2022-06-13 21:04:03,R_3Rwuanmj5v2tQxU,anonymous,EN,1,Yes - I agree to participate,27,15,Woman,-99,R_3Rwuanmj5v2tQxU
+2022-06-13 21:02:11,2022-06-13 21:04:11,IP Address,100,120,TRUE,2022-06-13 21:04:12,R_1CjWjLKQ1L2tMag,anonymous,EN,1,Yes - I agree to participate,33,15,Man,-99,R_1CjWjLKQ1L2tMag
+2022-06-13 21:02:13,2022-06-13 21:04:17,IP Address,100,123,TRUE,2022-06-13 21:04:17,R_1M70nmXERHbWGLa,anonymous,EN,1,Yes - I agree to participate,26,15,Woman,-99,R_1M70nmXERHbWGLa
+2022-06-13 21:02:06,2022-06-13 21:05:38,IP Address,100,212,TRUE,2022-06-13 21:05:39,R_rjSPBfC3jlbidvb,anonymous,EN,1,Yes - I agree to participate,49,16,Man,-99,R_rjSPBfC3jlbidvb
+2022-06-13 21:07:29,2022-06-13 21:08:04,IP Address,100,35,TRUE,2022-06-13 21:08:04,R_ystNLQlUDQ0nMhr,anonymous,EN,0.8999999761581420,Yes - I agree to participate,35,16,Man,-99,R_ystNLQlUDQ0nMhr
+2022-06-13 21:07:43,2022-06-13 21:08:45,IP Address,100,62,TRUE,2022-06-13 21:08:45,R_3ndg31rFFyZUzCO,anonymous,EN,,Yes - I agree to participate,26,17,Man,-99,R_3ndg31rFFyZUzCO
+2022-06-13 21:11:39,2022-06-13 21:11:56,IP Address,100,16,TRUE,2022-06-13 21:11:56,R_3PFBSE83vf3TY18,anonymous,EN,0.8999999761581420,Yes - I agree to participate,35,16,Man,-99,R_3PFBSE83vf3TY18
+2022-06-13 22:14:34,2022-06-13 22:15:03,IP Address,100,28,TRUE,2022-06-13 22:15:03,R_3E5ntgDvRvoyHPH,anonymous,EN,1,Yes - I agree to participate,33,18,Man,-99,R_3E5ntgDvRvoyHPH
+2022-06-13 22:15:15,2022-06-13 22:16:09,IP Address,100,54,TRUE,2022-06-13 22:16:10,R_3fDEEtV3UAkMQ9T,anonymous,EN,1,Yes - I agree to participate,29,16,Woman,-99,R_3fDEEtV3UAkMQ9T
+2022-06-13 22:16:57,2022-06-13 22:17:44,IP Address,100,47,TRUE,2022-06-13 22:17:45,R_3JwnsNvwmflQkii,anonymous,EN,1,Yes - I agree to participate,23,17,Man,-99,R_3JwnsNvwmflQkii
+2022-06-13 22:17:18,2022-06-13 22:17:46,IP Address,100,28,TRUE,2022-06-13 22:17:47,R_1pthdrNZgDQPdQz,anonymous,EN,1,Yes - I agree to participate,24,16,Man,-99,R_1pthdrNZgDQPdQz
+2022-06-13 22:16:50,2022-06-13 22:18:04,IP Address,100,74,TRUE,2022-06-13 22:18:05,R_1rNfVOoIBwR0Cv1,anonymous,EN,1,Yes - I agree to participate,65,11,Woman,-99,R_1rNfVOoIBwR0Cv1
+2022-06-13 22:17:28,2022-06-13 22:18:16,IP Address,100,48,TRUE,2022-06-13 22:18:17,R_3qyt5NkjByK7veL,anonymous,EN,0.8999999761581420,Yes - I agree to participate,32,13,Woman,-99,R_3qyt5NkjByK7veL
+2022-06-13 22:17:46,2022-06-13 22:18:21,IP Address,100,35,TRUE,2022-06-13 22:18:22,R_8IE9F3LjA9XB9D3,anonymous,EN,1,Yes - I agree to participate,31,22,Woman,-99,R_8IE9F3LjA9XB9D3
+2022-06-13 22:17:49,2022-06-13 22:18:27,IP Address,100,38,TRUE,2022-06-13 22:18:27,R_1Hq95PK6u7t3Dc0,anonymous,EN,1,Yes - I agree to participate,33,14,Woman,-99,R_1Hq95PK6u7t3Dc0
+2022-06-13 22:17:33,2022-06-13 22:18:33,IP Address,100,59,TRUE,2022-06-13 22:18:33,R_1PXd33cQrpQ0L8L,anonymous,EN,1,Yes - I agree to participate,32,23,Man,-99,R_1PXd33cQrpQ0L8L
+2022-06-13 22:18:20,2022-06-13 22:18:54,IP Address,100,34,TRUE,2022-06-13 22:18:54,R_xABzhzKretYLOBr,anonymous,EN,1,Yes - I agree to participate,41,14,Woman,-99,R_xABzhzKretYLOBr
+2022-06-13 22:19:11,2022-06-13 22:19:28,IP Address,100,17,TRUE,2022-06-13 22:19:28,R_1f8IUkiD9flxAiI,anonymous,EN,0.8999999761581420,Yes - I agree to participate,28,20,Woman,-99,R_1f8IUkiD9flxAiI
+2022-06-14 10:23:20,2022-06-14 10:24:23,IP Address,100,63,TRUE,2022-06-14 10:24:23,R_31Z3E0yfBLe6Dxd,anonymous,EN,1,Yes - I agree to participate,38,16,Woman,-99,R_31Z3E0yfBLe6Dxd
+2022-06-14 10:26:30,2022-06-14 10:27:07,IP Address,100,37,TRUE,2022-06-14 10:27:07,R_1gkzBR4W1nw41Be,anonymous,EN,1,Yes - I agree to participate,48,12,Man,-99,R_1gkzBR4W1nw41Be
+2022-06-14 10:26:50,2022-06-14 10:27:21,IP Address,100,31,TRUE,2022-06-14 10:27:22,R_1Ho8LyWEHKwfheV,anonymous,EN,1,Yes - I agree to participate,41,17,Man,-99,R_1Ho8LyWEHKwfheV
+2022-06-14 10:27:13,2022-06-14 10:27:33,IP Address,100,20,TRUE,2022-06-14 10:27:33,R_3hxYFawCjWlmYaL,anonymous,EN,1,Yes - I agree to participate,25,16,Woman,-99,R_3hxYFawCjWlmYaL
+2022-06-14 10:27:01,2022-06-14 10:27:43,IP Address,100,42,TRUE,2022-06-14 10:27:43,R_ebAmI8F1aroKt1v,anonymous,EN,1,Yes - I agree to participate,49,13,Woman,-99,R_ebAmI8F1aroKt1v
+2022-06-14 10:26:49,2022-06-14 10:28:15,IP Address,100,86,TRUE,2022-06-14 10:28:16,R_1Qyd5AItSyoQeLL,anonymous,EN,1,Yes - I agree to participate,48,20,Man,-99,R_1Qyd5AItSyoQeLL
+2022-06-14 10:27:34,2022-06-14 10:29:04,IP Address,100,89,TRUE,2022-06-14 10:29:04,R_1OqrRxM0GnCTMRM,anonymous,EN,1,Yes - I agree to participate,34,14,Woman,-99,R_1OqrRxM0GnCTMRM
+2022-06-14 10:26:56,2022-06-14 10:29:41,IP Address,100,164,TRUE,2022-06-14 10:29:41,R_x30qvlqhrZoqKD7,anonymous,EN,0.8999999761581420,Yes - I agree to participate,32,16,Man,-99,R_x30qvlqhrZoqKD7
+2022-06-14 10:26:52,2022-06-14 10:31:20,IP Address,100,267,TRUE,2022-06-14 10:31:20,R_2xLEJgAIIdtiFCa,anonymous,EN,1,Yes - I agree to participate,35,18,Woman,-99,R_2xLEJgAIIdtiFCa
+2022-06-14 10:30:38,2022-06-14 10:32:25,IP Address,100,106,TRUE,2022-06-14 10:32:25,R_1LIr9NhXkakqZsK,anonymous,EN,1,Yes - I agree to participate,21,15,Woman,-99,R_1LIr9NhXkakqZsK
+2022-06-14 10:59:25,2022-06-14 10:59:54,IP Address,100,28,TRUE,2022-06-14 10:59:54,R_2rxuMbv8vN07lbb,anonymous,EN,1,Yes - I agree to participate,19,13,Man,-99,R_2rxuMbv8vN07lbb
+2022-06-14 10:59:28,2022-06-14 10:59:57,IP Address,100,29,TRUE,2022-06-14 10:59:57,R_eXIQYRwOKepnqXT,anonymous,EN,1,Yes - I agree to participate,25,20,Woman,-99,R_eXIQYRwOKepnqXT
+2022-06-14 10:59:54,2022-06-14 11:00:20,IP Address,100,25,TRUE,2022-06-14 11:00:20,R_RErdgrjy7slqfv3,anonymous,EN,0.8999999761581420,Yes - I agree to participate,40,15,Man,-99,R_RErdgrjy7slqfv3
+2022-06-14 11:31:13,2022-06-14 11:31:41,IP Address,100,28,TRUE,2022-06-14 11:31:41,R_124EIVnDvUemy0C,anonymous,EN,0.8999999761581420,Yes - I agree to participate,31,19,Man,-99,R_124EIVnDvUemy0C
+2022-06-14 11:31:04,2022-06-14 11:31:48,IP Address,100,44,TRUE,2022-06-14 11:31:49,R_3knfkJqA9zLTDJ0,anonymous,EN,0.8999999761581420,Yes - I agree to participate,22,16,Woman,-99,R_3knfkJqA9zLTDJ0
+2022-06-14 11:31:03,2022-06-14 11:31:54,IP Address,100,50,TRUE,2022-06-14 11:31:54,R_3NJ7cgFzwXvCkOS,anonymous,EN,1,Yes - I agree to participate,36,17,Man,-99,R_3NJ7cgFzwXvCkOS
+2022-06-14 11:31:08,2022-06-14 11:32:09,IP Address,100,61,TRUE,2022-06-14 11:32:09,R_33m2UKUCq8KGCdn,anonymous,EN,1,Yes - I agree to participate,24,16,Woman,-99,R_33m2UKUCq8KGCdn
+2022-06-14 11:32:33,2022-06-14 11:33:00,IP Address,100,26,TRUE,2022-06-14 11:33:00,R_1dawEBIOQ2jlbiJ,anonymous,EN,1,Yes - I agree to participate,38,15,Man,-99,R_1dawEBIOQ2jlbiJ
+2022-06-14 11:33:26,2022-06-14 11:33:46,IP Address,100,20,TRUE,2022-06-14 11:33:46,R_2CBMBa2gQFEBpZ7,anonymous,EN,0.8999999761581420,Yes - I agree to participate,28,21,Man,-99,R_2CBMBa2gQFEBpZ7
+2022-06-14 11:35:28,2022-06-14 11:36:20,IP Address,100,51,TRUE,2022-06-14 11:36:20,R_xbXqZq3eiY62f3X,anonymous,EN,1,Yes - I agree to participate,36,16,Man,-99,R_xbXqZq3eiY62f3X
+2022-06-14 11:34:46,2022-06-14 11:38:47,IP Address,100,241,TRUE,2022-06-14 11:38:48,R_1oAzJLu9KVCs1FD,anonymous,EN,1,Yes - I agree to participate,46,18,Woman,-99,R_1oAzJLu9KVCs1FD
+2022-06-14 11:41:49,2022-06-14 11:42:30,IP Address,100,40,TRUE,2022-06-14 11:42:30,R_1gbCDFu0lvNhiId,anonymous,EN,1,Yes - I agree to participate,25,18,Man,-99,R_1gbCDFu0lvNhiId
+2022-06-14 11:31:02,2022-06-14 11:48:47,IP Address,100,1065,TRUE,2022-06-14 11:48:47,R_1QapQfFmuZMHmVd,anonymous,EN,1,Yes - I agree to participate,53,20,Man,-99,R_1QapQfFmuZMHmVd
+2022-06-14 12:39:49,2022-06-14 12:40:32,IP Address,100,42,TRUE,2022-06-14 12:40:32,R_3iIOlhdREFs2h1p,anonymous,EN,0.8999999761581420,Yes - I agree to participate,21,14,Woman,-99,R_3iIOlhdREFs2h1p

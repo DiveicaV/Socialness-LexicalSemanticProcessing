@@ -1,0 +1,440 @@
+---
+title: "Study 2 - Data Analysis"
+author: "Veronica Diveica"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include = FALSE}
+# set knitting options
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, message = FALSE, warning=FALSE)
+
+# load relevant packages
+library(plyr) # data wrangling
+library(tidyverse) # data wrangling
+library(sjPlot) # model summary tables & figures
+library(lmerTest) # lmm p vals
+library(lme4) # lmm
+library(afex) # lmm likelihood ratio tests
+library(interactions) # visualize results of interaction terms
+library(ggprism) # figure theme
+library(rstanarm) # bayesian analysis
+library(bayestestR) # bayesian analysis
+
+# Load data
+data <- read_csv("Data/Preprocessed/Data_clean.csv")
+
+
+```
+
+# R Session Information
+```{r session info, include = TRUE}
+sessionInfo()
+```
+
+# The effect of socialness on reaction times (log transformed)
+
+```{r logRT}
+
+# prepare data; filter, factorize, scale
+data_RT <- data %>% 
+  filter(ACC == 1 & PoS == "Verb") %>% # remove inaccurate and noun trials
+  mutate(Concreteness = scale(Concreteness)) %>% # standardize concreteness
+  mutate(across(c(participant, Word, Socialness), as.factor)) %>% # factorize variables
+  mutate("logRT" = log10(RT)) %>% # log transform
+  mutate(Socialness_coded = ifelse(Socialness == "Social", 0.5, -0.5))
+contrasts(data_RT$Socialness) <- c(-0.5, 0.5) # set condition to be effects coded: Social = .5; Non-social = -.5
+
+
+# FIT STATISTICAL MODELS 
+
+# # fit maximal model
+# m1 <- lmer(logRT ~ Socialness*Concreteness + (1 + Socialness*Concreteness|participant) + (1|Word), data = data_RT)
+# 
+# ## Identify optimal random effects structure
+# 
+# # 1. Run PCA on random effects of maximal model to  determine the number of random effects that could be specified (i.e., the number of components explaining >1% of variance) while achieving model identification. 
+# pca_model1 <- rePCA(m1)
+# summary(pca_model1) # PCA indicates that the maximal model is overparameterized
+# 
+# # 2. Perform iterative reduction of model complexity to arrive at parsimonious model. 
+# # 2.1. check whether zero-correlation parameter model is overfitted
+# m2 <- lmer_alt(logRT ~ Socialness*Concreteness + (1 + Socialness*Concreteness||participant) + (1|Word), data = data_RT)
+# pca_model2 <- rePCA(m2)
+# summary(pca_model2) # PCA indicates model is overparameterized
+# # 2.2. Dropping variance components to achieve model identification
+# # Beginning with the highest order random effect with the least amount of variance, remove random slope effects until a model that contains the number of random effects suggested by the principal components analysis is reached
+# # PCA found one item component with variance > 1%; one subject component with variance > 1%, so remove interaction slope
+# m3 <-  lmer_alt(logRT ~ Socialness*Concreteness + (1 + Socialness + Concreteness||participant) + (1|Word), data = data_RT)
+# pca_model3 <- rePCA(m3)
+# summary(pca_model3) # PCA indicates model is overparameterized
+# # remove concreteness slope
+# m4 <-  lmer_alt(logRT ~ Socialness*Concreteness + (1 + Socialness||participant) + (1|Word), data = data_RT)
+# pca_model4 <- rePCA(m4)
+# summary(pca_model4)
+# remove socialness slope
+m5 <-  lmer_alt(logRT ~ Socialness*Concreteness + (1|participant) + (1|Word), data = data_RT)
+pca_model5 <- rePCA(m5)
+summary(pca_model5) # PCA indicates identified model, making m5 the optimal model
+
+# fit best model
+model <- m5
+estimates_RT <- get_model_data(model, type = "std")
+
+# get results summary
+sum_model <- summary(model)
+sum_model
+
+# fit best model using Socialness_coded variable for input to interaction plot - see below
+model_interact <- lmer(logRT ~ Socialness_coded*Concreteness + (1|participant) + (1|Word), data = data_RT)
+
+
+# ROPE analysis
+set.seed(19711)
+# based on: https://osf.io/zdfya ; https://journals.sagepub.com/doi/full/10.1177/17470218221078299 
+# More info here: https://easystats.github.io/bayestestR/articles/region_of_practical_equivalence.html 
+
+generic_prior <- normal(location = c(0,0,0), scale = c(2.5,2.5,2.5), autoscale = TRUE) # specify priors 
+
+# bm_log_rt <- stan_glmer(logRT ~ Socialness*Concreteness + (1|participant) + (1|Word), data = data_RT, prior = generic_prior, iter = 6000) # run analysis
+# 
+# save(bm_log_rt, file = "Output/ROPE_logRT_model.RData") # save analysis results to save time when re-running script
+load("Output/ROPE_logRT_model.RData") # load saved data 
+
+percentage_in_rope_log_rt <- rope(bm_log_rt, ci = 0.95) # extract percentage most probable estimates in ROPE
+pd_log_rt <- p_direction(bm_log_rt) # extract probability of direction
+
+```
+
+
+## LMM Results
+
+Iterative procedure suggests modelling a random intercept per participant. Model with optimal random effects structure: logRT ~ Socialness*Concreteness + (1|participant) + (1|Word)  
+
+```{r logRT results2}
+
+# plot the interaction using item-level means
+dat <- data_RT %>% 
+  group_by(Word) %>%
+  summarize(Item_meanRT = mean(RT))
+dat <- left_join(dat, data)
+  
+fig1 <- ggplot(dat, aes(x = Concreteness, y = Item_meanRT, colour = Socialness)) +
+  geom_point(aes(shape = Socialness), size = 2, alpha = 1/50, stroke = 1) +
+  geom_smooth(method=lm)  +
+  theme_prism() +
+  scale_shape_manual(values=c(1, 2))+
+  scale_colour_manual(values = c("#79ad41",  "#d7aca1")) +
+  ylab("Word Mean RT (s)") +
+  scale_x_continuous(limits = c(1.5, 4.5), breaks = c(1.5, 2.5, 3.5, 4.5)) +
+  theme(legend.position = "none") +
+  ggtitle("Reaction Times") +
+  xlab("") +
+  scale_y_continuous(limits = c(0.8, 1.8), breaks = c(0.8, 1, 1.2, 1.4, 1.6, 1.8))
+
+ggsave("Figures/RT_effects_item.png", width = 4, height = 4)
+
+```
+
+```{r logRT results3, include = TRUE}
+
+# results table 
+sjPlot::tab_model(model, show.df = TRUE, df.method = "satterthwaite", 
+                  show.obs = FALSE, show.stat = TRUE, show.r2 = TRUE, show.ngroups = FALSE)
+
+# plot results
+# standardized coefficients
+sjPlot::plot_model(model, type = "std", show.values = TRUE, show.p = TRUE) 
+# plot predicted values (marginal effects) for main effects
+#sjPlot::plot_model(model,type="pred") 
+
+# visualize the interaction
+interact_plot(model_interact, pred = Socialness_coded, modx = Concreteness, x.label = "Socialness", pred.labels = c("Non-social", "Social"), interval = TRUE) + theme_prism()
+
+# visualize the interaction using item-level means
+fig1
+
+```
+
+### Check Assumptions
+
+```{r logRT results1, include = TRUE, fig.height=12}
+
+## check assumptions
+performance::check_model(model)
+
+```
+
+
+## Bayesian ROPE analysis
+
+The Bayesian analyses estimated that `r round(percentage_in_rope_log_rt[2, 5]*100, digits = 2)`% of the HDI for socialness (`r round(pd_log_rt[2, 2]*100, digits = 2)`% PD), `r round(percentage_in_rope_log_rt[3, 5]*100, digits = 2)`% for concreteness (`r round(pd_log_rt[3, 2]*100, digits = 2)`% PD), and `r round(percentage_in_rope_log_rt[4, 5]*100, digits = 2)`% for the interaction (`r round(pd_log_rt[4, 2]*100, digits = 2)`% PD), fell within the ROPE (`r round(percentage_in_rope_log_rt[1, 3], digits = 3)`-`r round(percentage_in_rope_log_rt[1, 4], digits = 3)`).
+
+```{r rope log rt, include = TRUE}
+
+plot(pd_log_rt) + theme_prism()
+
+plot(percentage_in_rope_log_rt) + theme_prism()
+```
+
+# The effect of socialness on accuracy
+
+```{r Accuracy}
+
+# prepare data
+data_ACC <- data %>% 
+  filter(PoS == "Verb") %>% # remove noun trials
+  mutate(Concreteness = scale(Concreteness)) %>% # standardize concreteness
+  mutate(across(c(participant, Word, Socialness, ACC), as.factor)) %>% # factorize variables
+  mutate(Socialness_coded = ifelse(Socialness == "Social", 0.5, -0.5))
+contrasts(data_ACC$Socialness) <- c(-0.5, 0.5) # set condition to be effects coded: Social = .5; Non-social = -.5
+
+# FIT STATISTICAL MODEL LMM 
+# # fit maximal model
+# m1 <- glmer(ACC ~ Socialness*Concreteness + (1 + Socialness*Concreteness|participant) + (1|Word), 
+#             data = data_ACC, 
+#             family = 'binomial')
+# 
+# # If model does not converge, use different optimizer
+# all_fit(m1) # bobyqa, nloptwrap.NLOPT_LN_NELDERMEAD, nloptwrap.NLOPT_LN_BOBYQA
+# 
+# m1 <- glmer(ACC ~ Socialness*Concreteness + (1 + Socialness*Concreteness|participant) + (1|Word), 
+#             data = data_ACC, 
+#             family = 'binomial',
+#             control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=100000)))
+# 
+# ## Identify optimal random effects structure
+# 
+# # 1. Run PCA on random effects of maximal model to  determine the number of random effects that could be specified (i.e., the number of components explaining >1% of variance) while achieving model identification. 
+# pca_model1 <- rePCA(m1)
+# summary(pca_model1) # PCA indicates that the maximal model is overparameterized
+# 
+# # 2. Perform iterative reduction of model complexity to arrive at parsimonious model. 
+# # 2.1. check whether zero-correlation parameter model is overfitted
+# m2 <- glmer(ACC ~ Socialness*Concreteness + (1 + Socialness*Concreteness||participant) + (1|Word), 
+#             data = data_ACC, 
+#             family = 'binomial',
+#             control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=10000000))) 
+# all_fit(m2) # does not converge, remove interaction slope
+# m2 <- glmer(ACC ~ Socialness*Concreteness + (1 + Socialness + Concreteness||participant) + (1|Word), 
+#             data = data_ACC, 
+#             family = 'binomial',
+#             control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=100000))) 
+# 
+# pca_model2 <- rePCA(m2)
+# summary(pca_model2) # PCA indicates model is overparameterized
+# 
+# # 2.2. Dropping variance components to achieve model identification
+# # PCA found one item component with variance > 1%; three subject component with variance > 1%
+# # remove concreteness slope
+# m3 <- glmer(ACC ~ Socialness*Concreteness + (1 + Socialness||participant) + (1|Word), 
+#             data = data_ACC, 
+#             family = 'binomial',
+#             control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=100000))) 
+# 
+# pca_model3 <- rePCA(m3)
+# summary(pca_model3) # PCA indicates model is overparameterized
+# # remove socialness slope
+m4 <- glmer(ACC ~ Socialness*Concreteness + (1|participant) + (1|Word), 
+            data = data_ACC, 
+            family = 'binomial',
+            control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=100000))) 
+
+pca_model4 <- rePCA(m4)
+summary(pca_model4) # PCA indicates identified model, making m4 the optimal model
+
+# fit model
+model <- m4
+
+sum_model <- summary(model)
+sum_model
+
+estimates_ACC <- get_model_data(model, type = "std")
+
+# fit best model using Socialness_coded variable for input to interaction plot - see below
+model_interact <- glmer(ACC ~ Socialness_coded*Concreteness + (1|participant) + (1|Word), 
+            data = data_ACC, 
+            family = 'binomial',
+            control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=100000)))
+
+# Bayesyian ROPE analysis
+
+# bm_acc <- stan_glmer(ACC ~ Socialness*Concreteness + (1|participant) + (1|Word),
+#             data = data_ACC,
+#             prior = generic_prior,
+#             family = 'binomial',
+#             iter = 6000)
+# save(bm_acc, file = "Output/ROPE_ACC_model.RData")
+load("Output/ROPE_ACC_model.RData")
+
+percentage_in_rope_acc <- rope(bm_acc, ci = 0.95)
+pd_acc <- p_direction(bm_acc)
+
+
+```
+
+
+## LMM
+
+Iterative procedure suggests modelling a random intercept per participant. Model with optimal random effects structure: Accuracy ~ Socialness*Concreteness + (1|participant) + (1|Word)  
+
+```{r accuracy results2}
+
+# visualize the interaction using item-level means
+dat <- data %>% 
+  filter(PoS == "Verb") %>% # remove noun trials
+  group_by(Word) %>%
+  summarise(Item_meanACC = mean(ACC)*100) %>%
+  mutate(Item_meanERR = 100 - Item_meanACC)
+
+dat <- left_join(dat, data)
+  
+fig2 <- ggplot(dat, aes(x = Concreteness, y = Item_meanERR, colour = Socialness)) +
+  geom_point(aes(shape = Socialness), size = 2, alpha = 1/50, stroke = 1) +
+  geom_smooth(method=lm)  +
+  theme_prism() +
+  scale_shape_manual(values=c(1, 2))+
+  scale_colour_manual(values = c("#79ad41",  "#d7aca1")) +
+  ylab("Word Incorrect Responses (%)") +
+  scale_x_continuous(limits = c(1.5, 4.5), breaks = c(1.5, 2.5, 3.5, 4.5)) +
+  theme(legend.position = "none") +
+  ggtitle("Error Rates") +
+  xlab("")
+
+ggsave("Figures/ACC_effects_item.png", width = 4, height = 4)
+
+```
+
+```{r accuracy results3, include = TRUE}
+
+# results table 
+sjPlot::tab_model(model, show.obs = FALSE, show.stat = TRUE, show.r2 = TRUE, show.ngroups = FALSE)
+
+# plot results
+# standardized coefficients
+sjPlot::plot_model(model, type = "std", show.values = TRUE, show.p = TRUE)
+
+# plot predicted values (marginal effects) for main effects
+sjPlot::plot_model(model,type="pred")
+
+# visualize the interaction
+interact_plot(model_interact, pred = Socialness_coded, modx = Concreteness, x.label = "Socialness", pred.labels = c("Non-social", "Social"), interval = TRUE) + theme_prism()
+
+# visualize the interaction using item-level means
+fig2
+
+```
+
+### Check Assumptions
+
+```{r accuracy results1, include = TRUE} 
+# check assumptions
+sjPlot::plot_model(model,type="diag")
+```
+
+## ROPE Analysis
+
+The Bayesian analyses estimated that `r round(percentage_in_rope_acc[2, 5]*100, digits = 2)`% of the HDI for socialness (`r round(pd_acc[2, 2]*100, digits = 2)`% PD), `r round(percentage_in_rope_acc[3, 5]*100, digits = 2)`% for concreteness (`r round(pd_acc[3, 2]*100, digits = 2)`% PD), and `r round(percentage_in_rope_acc[4, 5]*100, digits = 2)`% for the interaction (`r round(pd_acc[4, 2]*100, digits = 2)`% PD), fell within the ROPE (`r round(percentage_in_rope_acc[1, 3], digits = 3)`-`r round(percentage_in_rope_acc[1, 4], digits = 3)`).
+
+
+```{r rope acc, include = TRUE}
+
+plot(pd_acc) + theme_prism()
+
+plot(percentage_in_rope_acc) + theme_prism()
+```
+
+# The effect of socialness on raw RTs
+
+```{r raw RT}
+
+# 
+# # fit maximal model
+# m1 <- lmer(RT ~ Socialness*Concreteness + (1 + Socialness*Concreteness|participant) + (1|Word), data = data_RT)
+# 
+# ## Identify optimal random effects structure
+# 
+# # 1. Run PCA on random effects of maximal model to  determine the number of random effects that could be specified (i.e., the number of components explaining >1% of variance) while achieving model identification. 
+# pca_model1 <- rePCA(m1)
+# summary(pca_model1) # PCA indicates that the maximal model is overparameterized
+# 
+# # 2. Perform iterative reduction of model complexity to arrive at parsimonious model. 
+# # 2.1. check whether zero-correlation parameter model is overfitted
+# m2 <- lmer_alt(RT ~ Socialness*Concreteness + (1 + Socialness*Concreteness||participant) + (1|Word), data = data_RT)
+# pca_model2 <- rePCA(m2)
+# summary(pca_model2) # PCA indicates model is overparameterized
+# # 2.2. Dropping variance components to achieve model identification
+# # Beginning with the highest order random effect with the least amount of variance, remove random slope effects until a model that contains the number of random effects suggested by the principal components analysis is reached
+# # PCA found one item component with variance > 1%; one subject component with variance > 1%, so remove interaction slope
+# m3 <-  lmer_alt(RT ~ Socialness*Concreteness + (1 + Socialness + Concreteness||participant) + (1|Word), data = data_RT)
+# pca_model3 <- rePCA(m3)
+# summary(pca_model3) # PCA indicates model is overparameterized
+# # remove concreteness slope
+# m4 <-  lmer_alt(RT ~ Socialness*Concreteness + (1 + Socialness||participant) + (1|Word), data = data_RT)
+# pca_model4 <- rePCA(m4)
+# summary(pca_model4)
+# remove socialness slope
+m5 <-  lmer_alt(RT ~ Socialness*Concreteness + (1|participant) + (1|Word), data = data_RT)
+pca_model5 <- rePCA(m5)
+summary(pca_model5) # PCA indicates identified model , making m5 the optimal model
+
+# fit model
+model <- m5
+
+sum_model <- summary(model)
+sum_model
+
+# fit best model using Socialness_coded variable for input to interaction plot - see below
+model_interact <- lmer(RT ~ Socialness_coded*Concreteness + (1|participant) + (1|Word), data = data_RT)
+
+# ROPE
+
+# bm_rt <- stan_glmer(RT ~ Socialness*Concreteness + (1|participant) + (1|Word), data = data_RT, prior = generic_prior, iter = 6000)
+# 
+# save(bm_rt, file = "Output/ROPE_RT_model.RData")
+load("Output/ROPE_RT_model.RData")
+
+percentage_in_rope_rt <- rope(bm_rt, ci = 0.95)
+pd_rt <- p_direction(bm_rt)
+```
+
+## LMM
+
+Iterative procedure suggests modelling a random slope per participant. Model with optimal random effects structure: RT ~ Socialness*Concreteness + (1|participant) + (1|Word) 
+
+```{r RT results2, include=TRUE, warning=FALSE, message=FALSE}
+
+# results table 
+tab_model(model, df.method = "satterthwaite")
+
+# plot results
+# standardized coefficients
+plot_model(model, type = "std", show.values = TRUE, show.p = TRUE) 
+# plot predicted values (marginal effects) for main effects
+plot_model(model,type="pred")
+# visualize the interaction
+interact_plot(model_interact, pred = Socialness_coded, modx = Concreteness, x.label = "Socialness", pred.labels = c("Non-social", "Social"))
+
+```
+
+### Check Assumptions
+
+```{r RT results1, include = TRUE, fig.height=12}
+
+## check assumptions
+performance::check_model(model)
+
+```
+
+## ROPE Analysis
+
+```{r rope rt, include = TRUE, warning=FALSE, message=FALSE}
+
+plot(pd_rt) + theme_prism()
+
+plot(percentage_in_rope_rt) + theme_prism()
+```

@@ -370,7 +370,7 @@ performance::check_model(model) # assumptions violated
 ```{r pos}
 
 # prepare data
-dat <- read_csv("Data/Other/Socialness_contribution_dataset.csv")
+dat <- read_csv("Data/Other/Word_properties.csv")
 pos_dat <- read_csv("Data/Other/SUBTLEX-US frequency list with PoS and Zipf information.csv")
 pos_dat <- pos_dat %>% select(Word, Dom_PoS_SUBTLEX)
 pos <- left_join(dat, pos_dat) 
@@ -393,6 +393,6 @@ fig3 <- sjPlot::plot_model(model_pos, type="pred", terms = c("Part of Speech"))
 
 
 print(fig3)
-dev.copy(jpeg, filename = "Figures/Socialness_by_PoS.png", width = 2, height = 2)
+dev.copy(jpeg, filename = "Figures/Socialness_by_PoS.png")
 dev.off()
 ```

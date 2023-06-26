@@ -49,8 +49,8 @@
     - Other – openly-available datasets used to conduct the analysis investigating differences in socialness scores between verbs and nouns:
       - SUBTLEX-US frequency list with PoS and Zipf information.csv : Brysbaert M, New B, Keuleers E. 2012 Adding part-of-speech information to the SUBTLEX-US word frequencies. Behav. Res. Methods 2012 444 44, 991–997. (doi:10.3758/S13428-012-0190-4)
       - Word_properties.csv contains word socialness and concreteness ratings from:
-  - Diveica V, Pexman PM, Binney RJ. 2023 Quantifying social semantics: an inclusive definition of socialness and ratings for 8388 English words. Behav. Res. Methods 55, 461-473. (doi:10.3758/s13428-022-01810-x)
-  - Brysbaert2013_Concreteness.csv: Brysbaert M, Warriner AB, Kuperman V. 2014 Concreteness ratings for 40 thousand generally known English word lemmas. Behav. Res. Methods 46, 904–911. (doi:10.3758/s13428-013-0403-5)
+        - Diveica V, Pexman PM, Binney RJ. 2023 Quantifying social semantics: an inclusive definition of socialness and ratings for 8388 English words. Behav. Res. Methods 55, 461-473. (doi:10.3758/s13428-022-01810-x)
+        - Brysbaert2013_Concreteness.csv: Brysbaert M, Warriner AB, Kuperman V. 2014 Concreteness ratings for 40 thousand generally known English word lemmas. Behav. Res. Methods 46, 904–911. (doi:10.3758/s13428-013-0403-5)
   - Figures – figures generated using the associated script 2_Analysis .rmd. 
   - Output - .Rdata files containing the output of the time-intensive Bayesian ROPE analyses
 

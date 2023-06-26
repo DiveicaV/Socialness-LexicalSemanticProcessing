@@ -4,7 +4,7 @@
 
 **A description of all files is provided below:**
 
-1. Study1 – all data & files associated with Study 1: Socialness as a Predictor of Word Processing across Tasks
+**Study1** – all data & files associated with Study 1: Socialness as a Predictor of Word Processing across Tasks
   - Regression_analyses.Rmd: this R script runs regression models and generates all the analysis tables and figures reported in the associated manuscript;
   - Regression_analyses.html: R Markdown document generated using the associated script. This file contains the results of all regression analyses. 
   - Data:
@@ -23,7 +23,7 @@
     - Regressions_dataset.csv: the full dataset that was used in the regression analyses. This file is generated in the associated scripts based on the property and task files listed above. 
   - Figures – figures generated using the associated script Regression_analyses.Rmd. 
 
-2. Study2 – all data & files associated with Study 2: The Effect of Word Socialness on Verb Judgements
+**Study2** – all data & files associated with Study 2: The Effect of Word Socialness on Verb Judgements
   - 1_Data_cleaning .rmd/.html: the script (1) applies a set of exclusion criteria to the raw data and generates a clean dataset of behavioural responses for inclusion in the analyses for Study 2; (2) summarizes participant demographic information. 
   - 2_Analysis .rmd/.html: the script runs the linear mixed effect models and Bayesian analyses on logRTs and Error Rates reported in the manuscript Study 2 section. It additionally includes an analysis conducted on the raw RTs.
   - Data:
@@ -36,7 +36,7 @@
   - Figures – figures generated using the associated script 2_Analysis .rmd. 
   - Output - .Rdata files containing the output of the time-intensive Bayesian ROPE analyses
 
-3. Study3 - all data & files associated with Study 3: The Effect of Word Socialness on Noun Judgements
+**Study3** - all data & files associated with Study 3: The Effect of Word Socialness on Noun Judgements
   - 1_Data_cleaning .rmd/.html: the script (1) applies a set of exclusion criteria to the raw data and generates a clean dataset of behavioural responses for inclusion in the analyses for Study 3 (2) summarizes participant demographic information. 
   - 2_Analysis .rmd/.html: the script runs the linear mixed effect models and Bayesian analyses on logRTs and Error Rates reported in the manuscript Study 3 section. It additionally includes an analysis conducted on the raw RTs.
   - Data:
